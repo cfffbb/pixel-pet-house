@@ -1,0 +1,48 @@
+# ===== 构建产物 =====
+target/
+**/target/
+dist/
+dist-electron/
+build/
+release/
+*.jar
+
+# ===== 依赖目录 =====
+node_modules/
+
+# ===== IDE / 编辑器 =====
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# ===== 系统文件 =====
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ===== 日志 =====
+*.log
+
+# ===== 安全红线:含真实密钥/密码的文件绝不提交 =====
+application-local.yml
+application-prod.yml
+*.env
+
+# ===== 大文件 / 工具 / 临时产物 =====
+.tools/
+.backup/
+.userData/
+pet-backend/uploads/
+projects/
+
+# ===== 毕业论文 / 生成物 =====
+*.docx
+generate_thesis.js
+
+# ===== 参照素材(非源码) =====
+其他所有按钮的声音/
+宠物样例参照/
+小屋子背景参照/
+注册页面背景图/
+游戏图标/

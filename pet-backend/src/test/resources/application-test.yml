@@ -1,0 +1,33 @@
+# 测试环境配置:用 H2 内存库,不依赖真实 MySQL;密钥用测试专用值
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:pet_test;MODE=MySQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  mail:
+    host: localhost
+    port: 3025
+    username: test
+    password: test
+    from: test@test.com
+  sql:
+    init:
+      mode: never
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+pet:
+  security:
+    jwt-secret: test-jwt-secret-not-for-production-use-only-aaaaaaaa
+    jwt-expire-days: 7
+    aes-key: test-aes-key-16b

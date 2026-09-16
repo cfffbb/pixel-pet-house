@@ -1,0 +1,2338 @@
+<!doctype html>
+<!--
+  像素宠物小屋 · 桌面陪伴应用（v3）
+  视觉完全沿用 pixel-pet-cottage.html：像素宠物引擎、暖色小屋场景、圆润厚边按钮。
+  功能按后端 v2 提示词：认证、6 个场景（拉小球切换）、悬浮宠物小球、14 页功能、管理后台。
+  接口统一 http://localhost:8080，Authorization: Bearer <token>，返回 {code,msg,data}；
+  后端未连接时进入「演示模式」。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>像素宠物小屋 · 桌面陪伴</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Press+Start+2P&display=swap" rel="stylesheet" />
+<style>
+/* ─── 令牌（沿用 pixel-pet-cottage.html）────────────── */
+:root{
+  --bg:      oklch(98% 0.004 240);
+  --surface: oklch(100% 0 0);
+  --fg:      oklch(20% 0.02 240);
+  --muted:   oklch(50% 0.018 240);
+  --border:  oklch(90% 0.006 240);
+  --accent:  oklch(56% 0.12 170);
+  --accent-soft: color-mix(in oklch, var(--accent) 14%, transparent);
+  --fg-soft:     color-mix(in oklch, var(--fg) 6%, transparent);
+  --font-display: 'ZCOOL KuaiLe','Avenir Next','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+  --font-body:    -apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei','Segoe UI',system-ui,sans-serif;
+  --font-mono:    ui-monospace,'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;
+  --font-pix:     'Press Start 2P', ui-monospace, monospace;
+  --fs-h1: clamp(34px,4.6vw,54px);
+  --fs-h2: clamp(26px,3.2vw,38px);
+  --fs-lead: 17px;
+  --fs-body: 15px;
+  --fs-meta: 12px;
+  --gap-xs:8px; --gap-sm:12px; --gap-md:18px; --gap-lg:28px; --gap-xl:44px;
+  --container:1080px; --gutter:24px;
+  --radius:14px; --radius-lg:20px; --radius-xl:999px;
+
+  /* 场景像素调色板（与 v1 一致） */
+  --p-line:    oklch(30% 0.045 60);
+  --p-ink:     oklch(18% 0.03 60);
+  --p-cream:   oklch(96.5% 0.02 90);
+  --p-pink:    oklch(80% 0.09 15);
+  --p-heart:   oklch(68% 0.16 20);
+  --p-fur-cat:   oklch(74% 0.14 55);
+  --p-fur-cat-d: oklch(63% 0.15 50);
+  --p-fur-bun:   oklch(94% 0.02 85);
+  --p-fur-bun-d: oklch(85% 0.03 80);
+  --p-fur-dog:   oklch(81% 0.10 65);
+  --p-fur-dog-d: oklch(70% 0.11 60);
+  --p-wall:     oklch(92.5% 0.03 80);
+  --p-wall-shade: oklch(88% 0.03 80);
+  --p-wain:     oklch(85% 0.04 75);
+  --p-wain-d:   oklch(76% 0.05 70);
+  --p-wood:     oklch(73% 0.07 70);
+  --p-wood-d:   oklch(62% 0.08 65);
+  --p-wood-l:   oklch(82% 0.05 75);
+  --p-sky:      oklch(89% 0.06 80);
+  --p-sky-d:    oklch(82% 0.07 70);
+  --p-sun:      oklch(90% 0.09 85);
+  --p-rug:      oklch(79% 0.10 40);
+  --p-rug-d:    oklch(69% 0.12 35);
+  --p-rug-c:    oklch(95% 0.03 90);
+  --p-pot:      oklch(71% 0.10 45);
+  --p-leaf:     oklch(66% 0.11 145);
+  --p-leaf-d:   oklch(54% 0.12 140);
+  --p-book1:    oklch(70% 0.10 30);
+  --p-book2:    oklch(72% 0.08 200);
+  --p-book3:    oklch(78% 0.08 95);
+  --p-bowl:     oklch(69% 0.08 70);
+  --p-fish:     oklch(78% 0.12 30);
+  --p-zzz:      oklch(60% 0.10 230);
+  --p-spark:    oklch(87% 0.12 90);
+  --p-bubble:   oklch(80% 0.06 220);
+  --st-hunger: oklch(66% 0.14 55);
+  --st-mood:   oklch(66% 0.16 20);
+  --st-energy: var(--accent);
+  --st-clean:  oklch(64% 0.09 220);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:var(--fs-body);line-height:1.55;-webkit-font-smoothing:antialiased}
+img,svg,canvas{display:block;max-width:100%}
+canvas{image-rendering:pixelated}
+button{font:inherit;cursor:pointer}
+p{text-wrap:pretty}
+h1,h2,h3{text-wrap:balance}
+.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.pixnum{font-family:var(--font-pix);font-variant-numeric:tabular-nums;letter-spacing:1px}
+.container{max-width:var(--container);margin-inline:auto;padding-inline:var(--gutter)}
+.screen{display:none}
+.screen.active{display:block}
+
+/* ─── 像素按钮（圆润 + 厚边 + 硬阴影）────────────────── */
+.pix-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:3px solid var(--p-line);border-radius:var(--radius-xl);font-family:var(--font-display);letter-spacing:.02em;transition:transform .08s ease,box-shadow .08s ease,background .18s ease,color .18s ease;user-select:none}
+.pix-btn:active{transform:translateY(3px)}
+.pix-btn:focus-visible{outline:3px solid var(--fg);outline-offset:3px;border-radius:var(--radius-xl)}
+.btn-primary{padding:12px 32px;font-size:18px;background:var(--accent);color:var(--surface);border-color:color-mix(in oklch,var(--accent) 55%,black);box-shadow:0 5px 0 color-mix(in oklch,var(--accent) 55%,black)}
+.btn-primary:hover{background:color-mix(in oklch,var(--accent) 82%,white);color:color-mix(in oklch,var(--accent) 45%,black);box-shadow:0 6px 0 color-mix(in oklch,var(--accent) 55%,black)}
+.btn-ghost{padding:9px 18px;font-size:15px;background:transparent;color:var(--fg);border-color:var(--border)}
+.btn-ghost:hover{border-color:var(--fg);background:var(--fg-soft)}
+.btn-soft{background:var(--accent-soft);color:color-mix(in oklch,var(--accent) 55%,black);border-color:color-mix(in oklch,var(--accent) 30%,transparent)}
+.btn-soft:hover{background:color-mix(in oklch,var(--accent) 20%,transparent)}
+.btn-danger{background:color-mix(in oklch,var(--st-mood) 12%,var(--surface));color:var(--st-mood);border-color:color-mix(in oklch,var(--st-mood) 35%,transparent)}
+.btn-danger:hover{background:color-mix(in oklch,var(--st-mood) 20%,var(--surface))}
+.btn-sm{padding:4px 13px;font-size:13px;border-width:2.5px}
+.btn-block{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.star::after{content:'✦';font-size:.72em;margin-left:3px;color:var(--p-sun)}
+
+/* ─── 卡片 / 布局 ───────────────────────────────── */
+.card{background:color-mix(in oklch,var(--surface) 92%,transparent);border:3px solid var(--border);border-radius:var(--radius-lg);padding:18px;box-shadow:0 4px 0 var(--border)}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:920px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.row-between{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.stack>*+*{margin-top:12px}
+.divider{height:1px;background:var(--border);margin:12px 0}
+
+/* ─── 应用骨架 ─────────────────────────────────── */
+#appView{display:none;min-height:100dvh;flex-direction:column}
+#appView.active{display:flex}
+.scene-stage{position:relative;height:clamp(220px,30vh,300px);flex:0 0 auto;overflow:hidden}
+#sceneCanvas{position:absolute;inset:0;width:100%;height:100%}
+#scenePet{position:absolute;z-index:2}
+.topbar{position:absolute;top:12px;left:0;right:0;z-index:6;display:flex;align-items:center;justify-content:space-between;gap:10px;padding-inline:16px;pointer-events:none}
+.topbar>*{pointer-events:auto}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:19px;color:var(--fg);background:color-mix(in oklch,var(--surface) 86%,transparent);backdrop-filter:blur(8px);border:2.5px solid var(--p-line);border-radius:var(--radius-xl);padding:4px 16px 4px 10px;box-shadow:0 3px 0 color-mix(in oklch,var(--p-line) 45%,transparent)}
+.brand .dot{width:18px;height:18px;border-radius:50%;background:var(--accent);box-shadow:inset -3px -3px 0 rgba(0,0,0,.15)}
+.top-right{display:flex;align-items:center;gap:8px}
+.coin-pill{display:inline-flex;align-items:center;gap:6px;background:color-mix(in oklch,var(--surface) 86%,transparent);backdrop-filter:blur(8px);border:2.5px solid var(--p-line);border-radius:var(--radius-xl);padding:4px 14px;font-family:var(--font-pix);font-size:11px;box-shadow:0 3px 0 color-mix(in oklch,var(--p-line) 40%,transparent)}
+.coin-pill .c{width:14px;height:14px;border-radius:50%;background:var(--p-sun);box-shadow:inset -2px -2px 0 rgba(0,0,0,.15)}
+.user-chip{display:inline-flex;align-items:center;gap:6px;background:color-mix(in oklch,var(--surface) 86%,transparent);backdrop-filter:blur(8px);border:2.5px solid var(--border);border-radius:var(--radius-xl);padding:4px 14px;font-size:13px;box-shadow:0 3px 0 var(--border)}
+.user-chip .role{background:var(--accent-soft);color:color-mix(in oklch,var(--accent) 55%,black);border-radius:var(--radius-xl);padding:0 8px;font-size:11px}
+
+/* 场景舞台上的宠物名牌 / 状态 / 气泡 / 倒计时 */
+.nameplate{position:absolute;left:50%;transform:translateX(-50%);z-index:5;display:inline-flex;align-items:center;gap:8px;background:color-mix(in oklch,var(--surface) 90%,transparent);backdrop-filter:blur(8px);border:2.5px solid var(--p-line);border-radius:var(--radius-xl);padding:3px 14px 3px 10px;box-shadow:0 3px 0 color-mix(in oklch,var(--p-line) 45%,transparent);white-space:nowrap}
+.nameplate .lv{font-family:var(--font-pix);font-size:9px;color:var(--surface);background:var(--accent);border-radius:var(--radius-xl);padding:3px 8px}
+.nameplate .nm{font-family:var(--font-display);font-size:16px}
+.status-ico{position:absolute;z-index:5;width:22px;height:22px;image-rendering:pixelated}
+.speech{position:absolute;left:50%;transform:translateX(-50%);z-index:6;background:var(--surface);border:3px solid var(--p-line);border-radius:16px;padding:7px 16px;font-family:var(--font-display);font-size:15px;box-shadow:0 4px 0 color-mix(in oklch,var(--p-line) 50%,transparent);opacity:0;transition:opacity .25s ease,transform .25s ease;white-space:nowrap;pointer-events:none}
+.speech.show{opacity:1;transform:translateX(-50%) translateY(-3px)}
+.speech::after{content:'';position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--p-line)}
+.speech::before{content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:var(--surface)}
+.pm-count{position:absolute;left:50%;transform:translateX(-50%);z-index:6;font-family:var(--font-pix);font-size:17px;color:var(--surface);background:color-mix(in oklch,var(--p-line) 72%,transparent);border:3px solid var(--p-line);border-radius:12px;padding:6px 12px;text-shadow:2px 2px 0 rgba(0,0,0,.35);display:none}
+
+/* ─── 内容区 ───────────────────────────────────── */
+.content-wrap{flex:1;min-height:0;position:relative;background:var(--bg);border-top:3px solid var(--border)}
+.page{max-width:1080px;margin:0 auto;padding:18px 16px 120px}
+.page-head{margin-bottom:14px}
+.page-head h2{font-family:var(--font-display);font-size:var(--fs-h2);margin:0}
+.page-head .sub{font-size:var(--fs-meta);color:var(--muted);margin-top:2px}
+.sub-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.chip{border:2.5px solid var(--border);background:var(--surface);border-radius:var(--radius-xl);padding:5px 16px;font-size:13.5px;font-family:var(--font-display);color:var(--fg);transition:.15s}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip.active{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:var(--radius-xl);padding:1px 10px;font-size:12px;background:var(--fg-soft);color:var(--muted)}
+.badge.b-green{background:color-mix(in oklch,var(--st-energy) 16%,var(--surface));color:color-mix(in oklch,var(--st-energy) 60%,black)}
+.badge.b-red{background:color-mix(in oklch,var(--st-mood) 14%,var(--surface));color:var(--st-mood)}
+.badge.b-gold{background:color-mix(in oklch,var(--p-sun) 30%,var(--surface));color:color-mix(in oklch,var(--p-sun) 60%,black)}
+.badge.b-pink{background:color-mix(in oklch,var(--p-pink) 24%,var(--surface));color:color-mix(in oklch,var(--p-pink) 60%,black)}
+.badge.b-orange{background:color-mix(in oklch,var(--p-fur-cat) 22%,var(--surface));color:color-mix(in oklch,var(--p-fur-cat) 60%,black)}
+
+/* 表单 */
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12.5px;color:var(--muted);font-weight:600}
+.input,select.input,textarea.input{width:100%;padding:9px 13px;border:2.5px solid var(--border);border-radius:12px;background:var(--surface);color:var(--fg);font-size:14px;transition:border-color .15s}
+.input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+textarea.input{min-height:70px;resize:vertical}
+.form-card{max-width:420px;margin:0 auto}
+
+/* 表格 / 列表 */
+.table{width:100%;border-collapse:collapse;font-size:13px}
+.table th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:2px solid var(--border);white-space:nowrap}
+.table td{padding:9px 10px;border-bottom:1.5px solid var(--border);vertical-align:middle}
+.table tbody tr:hover{background:var(--fg-soft)}
+.table .ops{display:flex;gap:6px;flex-wrap:wrap}
+.list-row{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1.5px solid var(--border)}
+.list-row:last-child{border-bottom:0}
+
+/* 统计 / 状态条 */
+.stat{background:var(--surface);border:2.5px solid var(--border);border-radius:var(--radius-lg);box-shadow:0 3px 0 var(--border);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-size:23px;font-weight:800;font-family:var(--font-display);line-height:1.1}
+.stat .v small{font-size:12px;color:var(--muted);font-family:var(--font-body)}
+.stat .bar{height:9px;border-radius:var(--radius-xl);background:var(--border);border:1.5px solid color-mix(in oklch,var(--p-line) 40%,var(--surface));overflow:hidden;margin-top:6px}
+.stat .bar i{display:block;height:100%;border-radius:var(--radius-xl);background:var(--accent);transition:width .5s}
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:110px;padding-top:8px}
+.bar-chart .b{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.bar-chart .b i{width:100%;max-width:32px;border-radius:6px 6px 0 0;background:var(--accent);min-height:3px}
+.bar-chart .b span{font-size:11px;color:var(--muted)}
+
+/* 宠物 */
+.pet-svg{width:100%;height:auto;image-rendering:pixelated}
+.avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2.5px solid var(--border);background:var(--surface);image-rendering:pixelated}
+.avatar-lg{width:64px;height:64px}
+.pet-card-pix{background:var(--surface);border:3px solid var(--border);border-radius:var(--radius-lg);box-shadow:0 4px 0 var(--border);padding:16px;text-align:center;transition:transform .12s,border-color .15s}
+.pet-card-pix:hover{transform:translateY(-2px)}
+.pet-card-pix .ico{width:86px;margin:0 auto}
+.pet-card-pix .nm{font-weight:700;margin-top:6px}
+.shop-card{background:var(--surface);border:2.5px solid var(--border);border-radius:var(--radius-lg);padding:13px;display:flex;flex-direction:column;gap:8px;position:relative;transition:transform .15s,box-shadow .15s}
+.shop-card:hover{transform:translateY(-2px);box-shadow:0 4px 0 var(--border)}
+.shop-card .ico{width:58px;height:58px;margin:0 auto;border-radius:12px;background:var(--fg-soft);display:grid;place-items:center;image-rendering:pixelated}
+.shop-card .nm{font-weight:700;font-size:13.5px}
+.shop-card .ds{font-size:12px;color:var(--muted);min-height:30px}
+.shop-card .lock{position:absolute;top:9px;right:9px}
+.egg{width:92px;height:106px;margin:0 auto;cursor:pointer;animation:eggFloat 2.2s ease-in-out infinite}
+@keyframes eggFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* 对话 */
+.chat-box{background:var(--surface);border:3px solid var(--border);border-radius:var(--radius-lg);padding:14px;height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:74%;padding:8px 13px;border-radius:14px;font-size:13.5px;line-height:1.5;word-break:break-word}
+.msg.pet{align-self:flex-start;background:var(--fg-soft);border:1.5px solid var(--border);border-bottom-left-radius:4px;display:flex;gap:8px;align-items:flex-start}
+.msg.pet .avatar{width:32px;height:32px;flex:0 0 auto}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--surface);border-bottom-right-radius:4px}
+.msg .t{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+.msg.me .t{color:color-mix(in oklch,var(--surface) 78%,transparent)}
+.msg-date{align-self:center;font-size:11.5px;color:var(--muted);background:var(--fg-soft);border-radius:var(--radius-xl);padding:2px 10px}
+
+/* 番茄钟 */
+.timer-num{font-family:var(--font-pix);font-size:46px;line-height:1;text-align:center;color:var(--fg)}
+.timer-num.warn{color:var(--st-mood)}
+.pixel-big{font-family:var(--font-pix)}
+
+/* ─── 场景轨道（拉小球换场景）──────────────────────── */
+.rail{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:30;width:min(94vw,680px);height:64px;background:color-mix(in oklch,var(--p-wood) 82%,var(--surface));border:3px solid var(--p-line);border-radius:var(--radius-xl);box-shadow:0 5px 0 color-mix(in oklch,var(--p-line) 55%,transparent),inset 0 3px 0 rgba(255,255,255,.28);touch-action:none}
+.rail .slots{position:absolute;inset:0;display:flex;align-items:center;padding:0 6px}
+.rail-slot{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:0;color:color-mix(in oklch,var(--p-line) 82%,var(--surface));font-size:10.5px;font-family:var(--font-display);border-radius:var(--radius-xl);transition:color .15s}
+.rail-slot .si{width:24px;height:24px;image-rendering:pixelated}
+.rail-slot.on{color:var(--surface);text-shadow:0 1px 0 rgba(0,0,0,.25)}
+.rail-ball{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;background:var(--accent);border:3px solid var(--p-line);box-shadow:0 4px 0 color-mix(in oklch,var(--p-line) 60%,transparent),inset 5px 5px 0 rgba(255,255,255,.28),inset -5px -6px 0 rgba(0,0,0,.12);display:grid;place-items:center;z-index:2;pointer-events:none;transition:left .25s cubic-bezier(.34,1.56,.64,1)}
+.rail-ball .bi{width:26px;height:26px;image-rendering:pixelated}
+.rail-ball.wiggle{animation:ballWiggle .3s ease}
+@keyframes ballWiggle{0%,100%{transform:translateY(-50%) rotate(0)}25%{transform:translateY(-50%) rotate(-8deg)}75%{transform:translateY(-50%) rotate(8deg)}}
+
+/* ─── 悬浮宠物小球 ─────────────────────────────── */
+.float-pet{position:fixed;right:16px;bottom:92px;z-index:50;width:76px;height:76px}
+.float-pet .face{width:76px;height:76px;border-radius:50%;background:var(--surface);border:3px solid var(--p-line);box-shadow:0 6px 0 color-mix(in oklch,var(--p-line) 50%,transparent),0 14px 26px -10px var(--p-line);display:grid;place-items:center;cursor:grab;position:relative}
+.float-pet .face img{width:62px;height:62px;image-rendering:pixelated}
+.float-pet .face.bounce{animation:fpBounce .5s ease}
+.float-pet .face.spin{animation:fpSpin .6s ease}
+.float-pet .face.squish{animation:fpSquish .4s ease}
+@keyframes fpBounce{0%,100%{transform:translateY(0)}30%{transform:translateY(-14px)}60%{transform:translateY(0)}}
+@keyframes fpSpin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+@keyframes fpSquish{0%,100%{transform:scale(1,1)}40%{transform:scale(1.18,.82)}}
+.float-pet .bubble{position:absolute;bottom:82px;right:0;background:var(--surface);border:2.5px solid var(--p-line);border-radius:12px 12px 4px 12px;padding:7px 12px;font-size:12.5px;font-family:var(--font-display);box-shadow:0 4px 0 color-mix(in oklch,var(--p-line) 45%,transparent);white-space:nowrap;display:none}
+.float-pet .bubble.show{display:block;animation:tIn .2s ease}
+.float-pet .close{position:absolute;top:-9px;right:-9px;width:22px;height:22px;border-radius:50%;background:var(--st-mood);color:#fff;border:2px solid var(--p-line);font-size:11px;line-height:1;display:none;align-items:center;justify-content:center}
+.float-pet:hover .close{display:flex}
+.float-pet .menu{position:absolute;bottom:88px;right:0;background:var(--surface);border:3px solid var(--p-line);border-radius:14px;box-shadow:0 10px 26px -8px var(--p-line);padding:6px;display:none;min-width:150px;z-index:5}
+.float-pet .menu.show{display:block}
+.float-pet .menu button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:0;border-radius:9px;padding:7px 12px;font-size:13.5px;font-family:var(--font-display);color:var(--fg)}
+.float-pet .menu button:hover{background:var(--accent-soft)}
+.float-pet .fstat{position:absolute;top:-10px;left:-10px;width:20px;height:20px;image-rendering:pixelated}
+
+/* ─── 模态 / 提示 / 横幅 ────────────────────────── */
+.modal-mask{position:fixed;inset:0;background:rgba(40,28,16,.4);display:none;align-items:center;justify-content:center;z-index:70;padding:16px}
+.modal-mask.show{display:flex}
+.modal{background:var(--surface);border:3px solid var(--p-line);border-radius:18px;box-shadow:0 10px 0 color-mix(in oklch,var(--p-line) 50%,transparent),0 20px 50px rgba(40,28,16,.3);width:100%;max-width:390px;padding:20px}
+.modal h3{font-family:var(--font-display);font-size:17px;margin-bottom:6px}
+.modal .body{font-size:13.5px;color:var(--muted);margin-bottom:16px}
+.toasts{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:90;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{position:relative;border-radius:14px;padding:8px 20px 8px 16px;font-size:13.5px;font-weight:600;background:var(--surface);border:2.5px solid var(--p-line);box-shadow:0 4px 0 color-mix(in oklch,var(--p-line) 45%,transparent);animation:tIn .25s ease}
+.toast::after{content:'';position:absolute;bottom:-9px;left:22px;border:5px solid transparent;border-top-color:var(--p-line)}
+.toast::before{content:'';position:absolute;bottom:-6px;left:22px;border:4px solid transparent;border-top-color:var(--surface)}
+.toast.ok{color:color-mix(in oklch,var(--st-energy) 65%,black)}
+.toast.err{color:var(--st-mood)}
+.toast.info{color:color-mix(in oklch,var(--p-fur-cat) 65%,black)}
+@keyframes tIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.demo-banner{background:var(--accent-soft);border:2px dashed color-mix(in oklch,var(--accent) 55%,transparent);color:color-mix(in oklch,var(--accent) 55%,black);font-size:12.5px;padding:7px 14px;border-radius:10px;margin:0 auto 12px;display:none;align-items:center;gap:8px}
+
+/* ─── 认证页（小屋背景 + 像素卡片）─────────────────── */
+#authView{position:relative;min-height:100dvh;overflow:hidden}
+#authScene{position:absolute;inset:0;width:100%;height:100%}
+.auth-dim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(60,42,22,.12),rgba(60,42,22,.32))}
+.auth-wrap{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:24px}
+.auth-card{width:100%;max-width:430px;background:color-mix(in oklch,var(--surface) 94%,transparent);backdrop-filter:blur(6px);border:3px solid var(--p-line);border-radius:20px;box-shadow:0 8px 0 color-mix(in oklch,var(--p-line) 55%,transparent),0 30px 60px -20px rgba(40,28,16,.45);padding:26px}
+.auth-brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:18px}
+.auth-brand .dot{width:30px;height:30px;border-radius:50%;background:var(--accent);box-shadow:inset -5px -5px 0 rgba(0,0,0,.15)}
+.auth-brand h1{font-family:var(--font-display);font-size:24px}
+.auth-tabs{display:flex;gap:6px;margin-bottom:16px}
+.auth-tabs .chip{flex:1;text-align:center}
+#authForms .stack{display:flex;flex-direction:column;gap:12px}
+details.quick{margin-top:16px;font-size:12.5px;color:var(--muted)}
+details.quick summary{cursor:pointer}
+details.quick .row{margin-top:10px;gap:6px}
+
+/* 空状态 */
+.empty{padding:26px 10px;text-align:center;color:var(--muted);font-size:13.5px}
+.empty .e-ico{width:56px;margin:0 auto 8px;opacity:.8}
+
+/* ─── 响应式 ───────────────────────────────────── */
+@media(max-width:920px){
+  .scene-stage{height:clamp(190px,26vh,250px)}
+  .rail{width:96vw;height:58px}
+  .rail-ball{width:46px;height:46px}
+  .page{padding-bottom:110px}
+  .brand{font-size:16px;padding:3px 12px 3px 8px}
+  .coin-pill{font-size:9px;padding:3px 10px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ 认证视图（像素小屋背景） ═══ -->
+<div id="authView" data-od-id="auth-view">
+  <canvas id="authScene"></canvas>
+  <div class="auth-dim"></div>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-brand"><span class="dot"></span><h1>像素宠物小屋</h1></div>
+      <div class="auth-tabs">
+        <button class="chip active" data-auth-tab="login">登录</button>
+        <button class="chip" data-auth-tab="register">注册</button>
+        <button class="chip" data-auth-tab="forgot">忘记密码</button>
+      </div>
+      <div id="authForms"></div>
+      <details class="quick">
+        <summary>🛠️ 管理员测试账号快捷登录</summary>
+        <div class="row">
+          <button class="btn btn-ghost btn-sm" data-quick="admin1">admin1</button>
+          <button class="btn btn-ghost btn-sm" data-quick="admin2">admin2</button>
+          <button class="btn btn-ghost btn-sm" data-quick="tester1">tester1</button>
+          <button class="btn btn-ghost btn-sm" data-quick="tester2">tester2</button>
+          <button class="btn btn-ghost btn-sm" data-quick="tester3">tester3</button>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 应用视图 ═══ -->
+<div id="appView" data-od-id="app-view">
+  <div class="scene-stage">
+    <canvas id="sceneCanvas"></canvas>
+    <canvas id="scenePet"></canvas>
+    <div class="nameplate" id="nameplate" style="display:none"><span class="lv pixel-big" id="petLv">Lv.1</span><span class="nm" id="petName">小橘</span></div>
+    <img class="status-ico" id="statusIco" alt="" style="display:none">
+    <div class="speech" id="speech">你好呀～</div>
+    <div class="pm-count" id="pmCount">25:00</div>
+    <div class="topbar">
+      <span class="brand"><span class="dot"></span>像素宠物小屋</span>
+      <div class="top-right">
+        <span class="coin-pill"><span class="c"></span><span id="coinVal">0</span></span>
+        <span class="user-chip" id="userChip"></span>
+        <button class="btn btn-ghost btn-sm" data-act="logout">退出</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-wrap">
+    <div class="demo-banner" id="demoBanner">演示模式：后端未连接，展示模拟数据；所有按钮仍按接口清单调用 localhost:8080。</div>
+    <div class="page">
+      <div class="sub-pills" id="subPills"></div>
+      <div id="page"></div>
+    </div>
+  </div>
+
+  <div class="rail" id="rail" data-od-id="scene-rail" aria-label="拖动小球切换场景">
+    <div class="slots" id="railSlots"></div>
+    <div class="rail-ball" id="railBall"><img class="bi" id="railBallIco" alt=""></div>
+  </div>
+</div>
+
+<div class="modal-mask" id="modalMask">
+  <div class="modal">
+    <h3 id="modalTitle">确认</h3>
+    <div class="body" id="modalBody"></div>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn btn-ghost btn-sm" data-modal="cancel">取消</button>
+      <button class="btn btn-primary btn-sm" data-modal="ok">确定</button>
+    </div>
+  </div>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<div class="float-pet" id="floatPet" style="display:none" data-od-id="float-pet">
+  <img class="fstat" id="fpStat" alt="" style="display:none">
+  <div class="bubble" id="fpBubble">你好呀～</div>
+  <div class="menu" id="fpMenu"></div>
+  <button class="close" id="fpClose" title="隐藏">✕</button>
+  <div class="face" id="fpFace"></div>
+</div>
+
+<script>
+'use strict';
+/* ═══════════════ 基础工具 ═══════════════ */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(msg, type = 'info', ms = 2600) {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  $('#toasts').appendChild(el);
+  setTimeout(() => el.remove(), ms);
+}
+let modalCb = null;
+function confirmBox(title, body, cb) {
+  $('#modalTitle').textContent = title;
+  $('#modalBody').innerHTML = body;
+  $('#modalMask').classList.add('show');
+  modalCb = cb;
+}
+$('#modalMask').addEventListener('click', e => {
+  const b = e.target.closest('[data-modal]');
+  if (!b) return;
+  $('#modalMask').classList.remove('show');
+  if (b.dataset.modal === 'ok' && modalCb) modalCb();
+  modalCb = null;
+});
+function say(msg, ms = 2600) {
+  const sp = $('#speech');
+  sp.textContent = msg;
+  sp.classList.add('show');
+  clearTimeout(sayTimer);
+  sayTimer = setTimeout(() => sp.classList.remove('show'), ms);
+}
+let sayTimer = null;
+
+/* ═══════════════ 像素引擎（沿用 v1） ═══════════════ */
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C = {};
+['line','ink','cream','pink','heart','fur-cat','fur-cat-d','fur-bun','fur-bun-d','fur-dog','fur-dog-d',
+ 'wall','wall-shade','wain','wain-d','wood','wood-d','wood-l','sky','sky-d','sun','rug','rug-d','rug-c',
+ 'pot','leaf','leaf-d','book1','book2','book3','bowl','fish','zzz','spark','bubble']
+  .forEach(k => { C[k] = cssVar('--p-' + k); C[k.replace(/-/g, '_')] = cssVar('--p-' + k); });
+
+function mulberry32(a) { return function() {
+  a |= 0; a = a + 0x6D2B79F5 | 0;
+  let t = Math.imul(a ^ a >>> 15, 1 | a);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+  return ((t ^ t >>> 14) >>> 0) / 4294967296;
+}; }
+const rnd = mulberry32(20260701);
+
+function gridToCanvas(grid, pal, blink) {
+  const w = Math.max(...grid.map(r => r.length));
+  const h = grid.length;
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  const cx = cv.getContext('2d');
+  for (let y = 0; y < h; y++) {
+    const row = grid[y];
+    for (let x = 0; x < row.length; x++) {
+      const ch = row[x];
+      if (ch === '.') continue;
+      if (ch === 'I' && blink) { cx.fillStyle = C[pal.O]; cx.fillRect(x, y, 2, 1); continue; }
+      cx.fillStyle = C[pal[ch] || pal.O];
+      cx.fillRect(x, y, 1, 1);
+    }
+  }
+  // 裁剪透明边距
+  const data = cx.getImageData(0, 0, w, h).data;
+  let minX = w, minY = h, maxX = -1, maxY = -1;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (data[(y * w + x) * 4 + 3] > 0) {
+      if (x < minX) minX = x; if (x > maxX) maxX = x;
+      if (y < minY) minY = y; if (y > maxY) maxY = y;
+    }
+  }
+  if (maxX < 0) return cv;
+  const tw = maxX - minX + 1, th = maxY - minY + 1;
+  const out = document.createElement('canvas');
+  out.width = tw; out.height = th;
+  out.getContext('2d').drawImage(cv, minX, minY, tw, th, 0, 0, tw, th);
+  return out;
+}
+
+/* ═══════════════ 13 种像素宠物（正面 Q 版） ═══════════════ */
+const SPECIES = {
+  RAT:{n:'鼠',c:'#b8a494',e:'round',whisk:1},
+  OX:{n:'牛',c:'#c9a06c',e:'horn'},
+  TIGER:{n:'虎',c:'#f0a054',e:'point',stripe:1},
+  RABBIT:{n:'兔',c:'#f2ebe0',e:'long'},
+  DRAGON:{n:'龙',c:'#7fbf9e',e:'horn',wing:1},
+  SNAKE:{n:'蛇',c:'#93c47d',e:'none',coil:1},
+  HORSE:{n:'马',c:'#b98a5e',e:'horse'},
+  SHEEP:{n:'羊',c:'#efe9dc',e:'flop',wool:1},
+  MONKEY:{n:'猴',c:'#c98d5e',e:'round',tail:1},
+  ROOSTER:{n:'鸡',c:'#e98a5e',e:'comb'},
+  DOG:{n:'狗',c:'#c9a06c',e:'flop'},
+  PIG:{n:'猪',c:'#f2a2b5',e:'round',snout:1},
+  CAT:{n:'猫',c:'#f0a054',e:'point'}
+};
+const BODY = [
+  '..OFFFOOOFFFO..',
+  '..OFFFFFFFFO...',
+  '.OFFFFFFFFFFO..',
+  '.OFFFFFFFFFFO..',
+  '.OFIIFFFFFFIIFO.',
+  '.OFFFFFNNFFFFFO.',
+  '.OFFFFFFFFFFFFO.',
+  '..OFFFFFFFFO....',
+  '..OFO....OFO....',
+  '..L......L......'
+];
+const EARS = {
+  point:['....OO..OO....','...OEO..OEO...','...OEO..OEO...','...OFFO.OFFO...'],
+  round:['..OO......OO..','.OEEO....OEEO.','.OEEO....OEEO.','..OFFO..OFFO..'],
+  long: ['.O..........O.','OEO........OEO','OEO........OEO','OEO........OEO','.OEO......OEO.','..OFFO..OFFO..'],
+  flop: ['OO............OO','OEO..........OEO','OEO..........OEO','OFF..........FFO'],
+  horn: ['O..............O','.O............O.','..OEO....OEO...','..OFFO..OFFO...'],
+  horse:['O..............O','.OEO........OEO.','.OEO........OEO.','..OFFO..OFFO...'],
+  comb: ['...O...O..O.....','..OOO.OOO.OO....','..OEO...OEO....','..OFFO..OFFO...'],
+  none: []
+};
+function speciesGrid(code) {
+  const S = SPECIES[code];
+  const earRows = (EARS[S.e] || []).map(r => r.split(''));
+  const bodyRows = BODY.map(r => r.split(''));
+  const base = earRows.length;
+  const at = (i, j, ch) => { const row = bodyRows[i]; if (row && j >= 0 && j < row.length) row[j] = ch; };
+  if (S.whisk) { at(4, 1, 'W'); at(4, 14, 'W'); at(5, 0, 'W'); at(5, 15, 'W'); }
+  if (S.stripe) { at(3, 3, 'D'); at(3, 12, 'D'); at(4, 3, 'D'); at(4, 12, 'D'); }
+  if (S.snout) { at(3, 6, 'P'); at(3, 7, 'P'); at(3, 8, 'P'); at(3, 9, 'P'); at(4, 6, 'P'); at(4, 7, 'P'); at(4, 8, 'P'); at(4, 9, 'P'); }
+  if (S.wing) { at(2, 0, 'W'); at(2, 1, 'W'); at(2, 15, 'W'); at(1, 15, 'W'); }
+  if (S.coil) { bodyRows.push('..OOOOOOOOOO....'.split('')); bodyRows.push('..OOOOOOOOOO....'.split('')); }
+  let grid = earRows.concat(bodyRows);
+  if (S.wool) grid = ['..O......O......'.split(''), '...O....O.......'.split('')].concat(grid);
+  return grid;
+}
+function addBow(grid) {
+  return ['...PP..PP.....'.split(''), '..PPPPPPPP....'.split(''), '....PP..PP....'.split('')].concat(grid);
+}
+const PET_CACHE = {};
+function petFrames(code, sex) {
+  const key = code + '_' + sex;
+  if (PET_CACHE[key]) return PET_CACHE[key];
+  const pal = {
+    O:'line', F:'fur-' + ({RAT:'bun',OX:'bun',TIGER:'cat',RABBIT:'bun',DRAGON:'bun',SNAKE:'bun',HORSE:'dog',SHEEP:'bun',MONKEY:'dog',ROOSTER:'cat',DOG:'dog',PIG:'bun',CAT:'cat'}[code]), L:'cream', E:'pink', I:'ink', N:'ink', P:'pink', D:'line', W:'bun'
+  };
+  let grid = speciesGrid(code);
+  if (sex === 'FEMALE') grid = addBow(grid);
+  PET_CACHE[key] = {
+    normal: gridToCanvas(grid, pal, false),
+    blink: gridToCanvas(grid, pal, true),
+    w: Math.max(...grid.map(r => r.length)),
+    h: grid.length
+  };
+  return PET_CACHE[key];
+}
+function petImg(code, sex, cls = 'pet-svg', w = 96) {
+  const f = petFrames(code, sex);
+  const file = `assets/${code}_${sex}.gif`;
+  const uri = f.normal.toDataURL();
+  return `<img class="${cls}" width="${w}" height="${w}" src="${file}" alt="${(SPECIES[code]||{}).n || ''}${sex==='FEMALE'?'♀':'♂'}" onerror="this.onerror=null;this.src='${uri}'">`;
+}
+function petCodeName(code) { return (SPECIES[code] || { n: code }).n; }
+
+/* ═══════════════ 场景绘制（小屋/书房/商店/花园/阁楼/设置） ═══════════════ */
+function drawScene(type) {
+  const canvas = type === 'auth' ? $('#authScene') : $('#sceneCanvas');
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  const rect = (x, y, ww, hh, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(ww), Math.round(hh)); };
+  const garden = type === 'garden';
+  const wallH = garden ? h * 0.5 : h * 0.52, floorY = garden ? h * 0.72 : h * 0.68, floorH = h - floorY;
+
+  /* 背景 */
+  if (garden) {
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, '#bfe3f2'); g.addColorStop(0.7, '#dff0f7'); g.addColorStop(1, '#cfe9c4');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    rect(0, floorY, w, floorH, '#a8d69a');
+    for (let x = 0; x < w; x += 14) if (rnd() < 0.3) rect(x, floorY + rnd() * floorH, 2, 2, '#8fc47f');
+    // 云朵
+    const cloud = (cx, cy) => { rect(cx, cy, 26, 8, '#fff'); rect(cx + 6, cy - 6, 14, 6, '#fff'); rect(cx - 8, cy + 4, 42, 6, '#fff'); };
+    cloud(w * 0.12, h * 0.14); cloud(w * 0.62, h * 0.09); cloud(w * 0.85, h * 0.2);
+    rect(w * 0.3, h * 0.08, 14, 14, '#ffd76e'); // 太阳
+    // 栅栏
+    for (let x = 0; x < w; x += 40) rect(x, floorY - 16, 6, 16, '#c8a16b');
+    rect(0, floorY - 6, w, 4, '#b98a5e');
+    // 树
+    const tree = (tx) => { rect(tx, floorY - 26, 12, 26, '#9c6b3f'); rect(tx - 12, floorY - 52, 36, 28, '#6fae63'); rect(tx - 6, floorY - 60, 24, 12, '#6fae63'); };
+    tree(w * 0.08); tree(w * 0.94);
+    // 花
+    for (let i = 0; i < 10; i++) { const fx = w * (0.12 + i * 0.08); rect(fx, floorY + 6, 4, 8, '#8fc47f'); rect(fx, floorY, 4, 4, ['#f2a2b5','#ffd76e','#f0a054','#fff'][i % 4]); }
+  } else {
+    rect(0, 0, w, wallH, C.wall);
+    for (let x = 0; x < w; x += 26) if (rnd() < 0.25) rect(x, rnd() * wallH, 1, 1, C['wall-shade']);
+    rect(0, wallH, w, floorY - wallH, C.wain);
+    for (let x = 14; x < w; x += 92) rect(x, wallH + 3, 2, floorY - wallH - 6, C.wain_d);
+    rect(0, floorY - 4, w, 4, C.wain_d);
+    const plankH = Math.max(14, floorH / 5);
+    const tones = [C.wood, C.wood_l, C.wood, C.wood_d, C.wood];
+    for (let i = 0; i < 5; i++) {
+      const y = floorY + i * plankH;
+      rect(0, y, w, plankH, tones[i]);
+      for (let x = 0; x < w; x += 9) if (rnd() < 0.2) rect(x, y + 3, 3, 1, i % 2 ? C.wood_l : C.wood_d);
+      rect(0, y, w, 1, C.wood_d);
+    }
+    // 圆窗
+    const winCX = w * 0.14, winCY = wallH * 0.4, winR = Math.min(h, w) * 0.1;
+    rect(winCX - winR * 0.8, winCY + winR * 0.6, winR * 1.6, 6, C.wood_d);
+    ctx.fillStyle = C.sky_d; ctx.beginPath(); ctx.arc(winCX, winCY - winR * 0.6, winR * 0.6, Math.PI, 0); ctx.rect(winCX - winR * 0.6, winCY - winR * 0.6, winR * 1.2, winR * 0.8); ctx.fill();
+    ctx.fillStyle = C.sky; ctx.fillRect(winCX - winR * 0.45, winCY - winR * 0.45, winR * 0.9, winR * 0.7);
+    ctx.fillStyle = C.sun; ctx.fillRect(winCX - winR * 0.3, winCY - winR * 0.38, winR * 0.16, winR * 0.16);
+    ctx.strokeStyle = C.wood; ctx.lineWidth = Math.max(3, winR * 0.14);
+    ctx.beginPath(); ctx.arc(winCX, winCY - winR * 0.6, winR * 0.6, Math.PI, 0); ctx.rect(winCX - winR * 0.6, winCY - winR * 0.6, winR * 1.2, winR * 0.8); ctx.stroke();
+    // 挂画
+    rect(w * 0.72, wallH * 0.14, Math.min(w, h) * 0.07, Math.min(w, h) * 0.06, C.wood);
+    rect(w * 0.72 + 3, wallH * 0.14 + 3, Math.min(w, h) * 0.07 - 6, Math.min(w, h) * 0.06 - 6, C.rug_c);
+    rect(w * 0.72 + Math.min(w, h) * 0.02, wallH * 0.14 + 4, 6, 6, C.leaf);
+  }
+
+  /* 场景道具 */
+  if (type === 'study') {
+    rect(w * 0.06, floorY - 6, w * 0.5, 8, C.wood_d);
+    rect(w * 0.07, floorY - 24, w * 0.18, 18, C.wood);
+    rect(w * 0.08, floorY - 22, 8, 14, C.book1); rect(w * 0.17, floorY - 24, 6, 16, C.book2); rect(w * 0.24, floorY - 20, 7, 12, C.book3);
+    rect(w * 0.36, floorY - 18, 4, 12, C.wood); rect(w * 0.36, floorY - 22, 10, 5, C.sun); // 台灯
+  } else if (type === 'shop') {
+    rect(w * 0.1, floorY - 34, w * 0.3, 34, C.wood);
+    rect(w * 0.12, floorY - 28, w * 0.26, 8, C.wood_l);
+    rect(w * 0.13, floorY - 18, 8, 8, C.fish); rect(w * 0.23, floorY - 18, 8, 8, C.pot); rect(w * 0.33, floorY - 18, 8, 8, C.book1);
+    rect(w * 0.7, floorY - 26, w * 0.16, 26, C.wood_d);
+    rect(w * 0.72, floorY - 22, 6, 8, C.book2); rect(w * 0.79, floorY - 24, 6, 10, C.book3);
+    // 遮阳棚
+    for (let i = 0; i < 5; i++) rect(w * 0.1 + i * 12, floorY - 42, 12, 8, i % 2 ? C.heart : C.rug_c);
+    rect(w * 0.1, floorY - 34, w * 0.3, 3, C.wood_d);
+  } else if (type === 'tools') {
+    rect(w * 0.12, floorY - 20, 26, 20, C.wood_d);
+    rect(w * 0.13, floorY - 18, 10, 6, '#c8b8a0'); rect(w * 0.25, floorY - 18, 10, 6, '#c8b8a0');
+    rect(w * 0.76, floorY - 14, 16, 14, '#a9a9a9'); rect(w * 0.77, floorY - 20, 4, 6, '#8a8a8a');
+  } else if (type === 'settings') {
+    rect(w * 0.14, wallH * 0.32, 14, 14, C.pot); rect(w * 0.17, wallH * 0.26, 14, 14, C.book2);
+  }
+  if (type !== 'garden') {
+    // 地毯（宠物站立处）
+    const rgX = w * 0.5, rgY = floorY + floorH * 0.4, rgRX = w * 0.14, rgRY = floorH * 0.18;
+    ctx.fillStyle = C.rug_d; ctx.beginPath(); ctx.ellipse(rgX, rgY, rgRX, rgRY, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = C.rug; ctx.beginPath(); ctx.ellipse(rgX, rgY, rgRX * 0.82, rgRY * 0.8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = C.rug_c;
+    for (let a = 0; a < Math.PI * 2; a += 0.5) { ctx.beginPath(); ctx.ellipse(rgX, rgY, rgRX * 0.55, rgRY * 0.55, 0, a, a + 0.18); ctx.fill(); }
+  }
+  // 宠物脚下阴影
+  ctx.fillStyle = 'rgba(60,40,20,.18)';
+  ctx.beginPath(); ctx.ellipse(w * 0.5, floorY + floorH * 0.32, w * 0.07, 7, 0, 0, Math.PI * 2); ctx.fill();
+  // 背景点缀（小星星/爱心）
+  for (let i = 0; i < 5; i++) { const sx = w * (0.05 + i * 0.2), sy = h * (0.08 + (i % 3) * 0.09); rect(sx, sy, 3, 3, C.spark); rect(sx + 1, sy - 1, 1, 5, C.spark); rect(sx - 1, sy + 1, 5, 1, C.spark); }
+  rect(w * 0.05, h * 0.3, 4, 4, C.heart); rect(w * 0.93, h * 0.24, 4, 4, C.heart);
+}
+let petScale = 8, petW = 0, petH = 0;
+function layoutScenePet() {
+  const stage = document.querySelector('.scene-stage');
+  if (!stage) return;
+  const w = stage.clientWidth, h = stage.clientHeight;
+  const pet = MOCK.pet || { code: 'CAT', sex: 'MALE' };
+  const f = petFrames(pet.code, pet.sex);
+  petScale = Math.max(5, Math.min(11, Math.round(Math.min(w, h) * 0.055)));
+  petW = f.w * petScale; petH = f.h * petScale;
+  const cv = $('#scenePet');
+  cv.style.width = petW + 'px'; cv.style.height = petH + 'px';
+  cv.width = petW; cv.height = petH;
+  const x = (w - petW) / 2;
+  const y = h * 0.74 - petH;
+  cv.style.left = x + 'px'; cv.style.top = y + 'px';
+  $('#speech').style.top = (y - 92) + 'px';
+  $('#pmCount').style.top = (y - 62) + 'px';
+  $('#statusIco').style.left = (x + petW + 6) + 'px';
+  $('#statusIco').style.top = (y - 14) + 'px';
+  const np = $('#nameplate');
+  if (MOCK.pet) {
+    $('#petLv').textContent = 'Lv.' + (MOCK.pet.lv || 1);
+    $('#petName').textContent = MOCK.pet.name;
+    np.style.display = 'inline-flex';
+    np.style.top = (y - 42) + 'px';
+  } else {
+    np.style.display = 'none';
+  }
+}
+let petBlinkT = 0, petPhase = 0;
+function drawScenePet(t) {
+  const cv = $('#scenePet');
+  if (!cv.width || !MOCK.pet) return;
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const f = petFrames(MOCK.pet.code, MOCK.pet.sex);
+  const bob = Math.sin(t / 500) * petScale * 0.16;
+  const img = (petBlinkT > 0) ? f.blink : f.normal;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(img, 0, bob, f.w * petScale, f.h * petScale);
+}
+
+/* ═══════════════ 状态与 API 层 ═══════════════ */
+const API_BASE = 'http://localhost:8080';
+let token = '', user = null;
+try {
+  token = localStorage.getItem('dp_token') || '';
+  user = JSON.parse(localStorage.getItem('dp_user') || 'null');
+  /* 融合:同步给悬浮宠物窗与主进程推送 */
+  if (token) {
+    try { localStorage.setItem('pet_token', token); localStorage.setItem('pet_user', JSON.stringify(user || { role: 'USER' })); } catch (e2) {}
+    if (window.petAPI && window.petAPI.setToken) window.petAPI.setToken(token);
+  }
+} catch (e) { /* 无存储环境 */ }
+let demo = false;
+/* ── 融合工具 ── */
+function rarityZh(r) {
+  return ({ NORMAL: '普通', COMMON: '普通', RARE: '稀有', EPIC: '史诗', LEGEND: '传说' })[r] || r || '普通';
+}
+function codeByTypeName(n) {
+  for (const c in SPECIES) if (SPECIES[c].n === n) return c;
+  return 'CAT';
+}
+function zhCode(n) {
+  for (const c in SPECIES) if (SPECIES[c].n === n) return c;
+  return n;
+}
+let PROV = {}; // 服务商 label -> code
+function provCode(label) {
+  if (PROV[label]) return PROV[label];
+  const k = Object.keys(PROV).find(c => PROV[c] === label);
+  return k || label;
+}
+function schedBody(b) {
+  const rep = { '一次': 'ONCE', '每天': 'DAILY', '每周': 'WEEKLY' };
+  const pri = { '高': 1, '中': 2, '低': 3 };
+  return {
+    title: b.title,
+    remindAt: b.time || b.remindAt || null,
+    repeatType: rep[b.repeat] || b.repeatType || 'ONCE',
+    priority: pri[b.priority] !== undefined ? pri[b.priority] : (b.priority || 2),
+    tag: (b.tags && b.tags.length) ? b.tags.join(',') : (b.tag || '')
+  };
+}
+function shimData(method, path, data, body) {
+  if (data && !Array.isArray(data) && Array.isArray(data.records)) data = data.records; // 分页对象→数组
+  /* 宠物 */
+  if (path.indexOf('/api/pet/my') >= 0 && data) {
+    if (data.hasPet === false) return { hasPet: false };
+    return { hasPet: true, id: data.petId, code: data.typeCode, sex: data.gender, name: data.petName,
+      lv: data.level, age: data.ageDays, rare: rarityZh(data.rarity), stage: data.stage,
+      personality: data.personality, hunger: data.hunger, mood: data.mood, coins: data.coins,
+      listed: data.listed, status: data.status, behavior: data.behavior, mature: data.mature,
+      typeName: data.typeName, subtypeName: data.subtypeName };
+  }
+  if (path.indexOf('/api/pet/play-modes') >= 0 && Array.isArray(data) && data.length && typeof data[0] === 'object') {
+    return data.map(function (m) { return m.name; });
+  }
+  if (path.indexOf('/api/pet/play') >= 0 && data && data.exp !== undefined) {
+    if (data.xp === undefined) data.xp = data.exp;
+    return data;
+  }
+  /* 商店/背包 */
+  if (path.indexOf('/api/shop/items') >= 0 && data && data.available) {
+    const mk = function (it) { return { id: it.id, name: it.itemName, type: it.itemType, species: it.itemCode || '通用',
+      hunger: it.hungerRestore, mood: it.moodRestore, price: it.price,
+      lv: it.locked ? (it.unlockLevel || 1) : 1, icon: it.itemCode || 'fish', listed: it.enabled !== 0 }; };
+    return (data.available || []).map(mk).concat((data.locked || []).map(mk));
+  }
+  if (path.indexOf('/api/shop/inventory') >= 0 && Array.isArray(data)) {
+    return data.map(function (it) { return { id: it.itemId, name: it.itemName, count: it.quantity,
+      hunger: it.hungerRestore, mood: it.moodRestore, type: it.itemType,
+      icon: it.itemType === 'FOOD' ? 'fish' : (it.itemType === 'TOY' ? 'ball' : 'house') }; });
+  }
+  /* 设置 */
+  if (path.indexOf('/api/settings/allow-breeding') >= 0) return { allowBreeding: !!(body && body.value) };
+  if (path.indexOf('/api/settings/app-monitor') >= 0) return { appMonitor: !!(body && body.value) };
+  if (path.indexOf('/api/settings') >= 0 && data) {
+    if (data.appMonitorEnabled !== undefined && data.appMonitor === undefined) data.appMonitor = data.appMonitorEnabled;
+    return data;
+  }
+  /* 配种 */
+  if (path.indexOf('/api/breeding/market') >= 0 && Array.isArray(data)) {
+    return data.map(function (m) { return { id: m.petId, code: m.typeCode, sex: m.gender, name: m.petName,
+      owner: m.ownerNickname || m.ownerUsername || '', rare: rarityZh(m.rarity), lv: m.level,
+      age: m.ageDays, personality: m.personality, hunger: m.hunger, mood: m.mood, coins: m.coins }; });
+  }
+  if (path.indexOf('/api/breeding/my') >= 0 && Array.isArray(data)) {
+    return data.map(function (r) { return { id: r.recordId, pet: (r.motherPetName || '?') + ' × ' + (r.fatherPetName || '?'),
+      date: String(r.createdAt || '').replace('T', ' '),
+      status: r.status === 'PENDING' ? '待确认' : r.status === 'ACCEPTED' ? '已同意' : r.status === 'REJECTED' ? '已拒绝' : (r.status || '') }; });
+  }
+  /* 好友/用户 */
+  if (path.indexOf('/api/friends') >= 0 && Array.isArray(data)) {
+    return data.map(function (f) { return { id: f.friendId, code: f.petTypeCode, sex: f.petGender,
+      nick: f.nickname || f.username, username: f.username, since: String(f.since || '').replace('T', ' ') }; });
+  }
+  if (path.indexOf('/api/users/search') >= 0 && Array.isArray(data)) {
+    return data.map(function (u) { return { id: u.userId, name: u.nickname || u.username, username: u.username }; });
+  }
+  /* 收件箱 */
+  if (path.indexOf('/api/inbox') >= 0 && path.indexOf('/message') < 0 && Array.isArray(data)) {
+    const tz = { BREED_REQUEST: '配种申请', GIFT_REQUEST: '赠送申请', FRIEND_REQUEST: '好友申请', CHAT: '私聊', REPORT: '系统消息' };
+    return data.map(function (m) { return { id: m.messageId, type: tz[m.type] || m.type, from: m.senderNickname || '系统',
+      text: m.content, unread: m.status === 'UNREAD', state: m.requestStatus === 'PENDING' ? 'pending' : 'done' }; });
+  }
+  /* 聊天历史 */
+  if (path.indexOf('/api/chat/history') >= 0 && Array.isArray(data)) {
+    const groups = [], idx = {};
+    data.slice().reverse().forEach(function (m) {
+      const d = String(m.createdAt || '').slice(0, 10);
+      if (!(d in idx)) { idx[d] = groups.length; groups.push({ date: d, items: [] }); }
+      groups[idx[d]].items.push({ who: m.role === 'USER' ? 'me' : 'pet', text: m.content, time: String(m.createdAt || '').slice(11, 16) });
+    });
+    return groups;
+  }
+  /* 墓地 */
+  if (path.indexOf('/api/gravestones') >= 0 && Array.isArray(data)) {
+    return data.map(function (g) { return { id: g.id, code: codeByTypeName(g.typeName), sex: g.gender, name: g.petName,
+      personality: g.personality, days: g.lifespanDays, died: String(g.diedAt || '').slice(0, 10),
+      reflected: g.answered === 1, content: [g.reflection1, g.reflection2].filter(Boolean).join('；') || '未填写' }; });
+  }
+  /* 托管所 */
+  if (path.indexOf('/api/hatchling/my') >= 0 && Array.isArray(data)) {
+    return data.map(function (h) { return { id: h.id, code: codeByTypeName(h.typeName), sex: h.gender,
+      rare: rarityZh(h.rarity), personality: h.personality, status: h.status === 'STORED' ? '托管中' : '冻结' }; });
+  }
+  /* 服务商 */
+  if (path.indexOf('/api/keys/providers') >= 0 && Array.isArray(data)) {
+    PROV = {};
+    return data.map(function (p) { PROV[p.label] = p.name; return { n: p.label, addr: p.baseUrl, m: (p.models && p.models[0]) || '', code: p.name, stt: p.stt }; });
+  }
+  if (path.indexOf('/api/keys') >= 0 && method === 'GET' && Array.isArray(data)) {
+    return data.map(function (k) { return { id: k.id, provider: k.provider, address: k.baseUrl, model: k.modelName, masked: k.keyMasked }; });
+  }
+  /* 管理后台 */
+  if (path.indexOf('/api/admin/stats') >= 0 && data) {
+    return { users: data.userCount, pets: data.petCount, todayFocus: data.pomodoroCount, coins: '—' };
+  }
+  if (path.indexOf('/api/admin/users') >= 0 && Array.isArray(data)) {
+    return data.map(function (u) { return { id: u.id, name: u.nickname || u.username, role: u.role,
+      status: (u.status === 'ENABLED' || u.status === 1) ? '启用' : '禁用', coins: '—' }; });
+  }
+  if (path.indexOf('/api/admin/pets') >= 0 && Array.isArray(data)) {
+    return data.map(function (p) { return { id: p.petId, owner: p.owner, name: p.petName, code: codeByTypeName(p.typeName),
+      sex: p.gender, personality: p.personality, lv: p.level, hunger: p.hunger, mood: p.mood, coins: p.coins,
+      status: p.status === 'DANGER' ? '病危' : '正常' }; });
+  }
+  if (path.indexOf('/api/admin/shop-items') >= 0 && Array.isArray(data)) {
+    return data.map(function (it) { return { id: it.id, name: it.itemName, type: it.itemType, price: it.price, listed: it.enabled === 1 }; });
+  }
+  if (path.indexOf('/api/admin/play-modes') >= 0 && Array.isArray(data)) {
+    return data.map(function (m) { return { id: m.id, name: m.name }; });
+  }
+  if (path.indexOf('/api/admin/reports') >= 0 && Array.isArray(data)) {
+    return data.map(function (r) { return { id: r.id, from: r.reporter, target: r.target, text: r.content, chat: r.messageContent || '',
+      status: r.status === 'PENDING' ? '待处理' : '已处理' }; });
+  }
+  /* 番茄钟 */
+  if (path.indexOf('/api/pomodoro/start') >= 0 && data && data.durationMinutes) {
+    return { id: data.recordId, total: data.durationMinutes * 60, remain: data.durationMinutes * 60, paused: false, pauses: 0, done: false };
+  }
+  /* 相册 */
+  if (path.indexOf('/api/photo/albums') >= 0 && Array.isArray(data)) {
+    return data.map(function (a) { return { id: a.petId, code: a.typeCode, sex: a.gender, name: a.petName,
+      photos: (a.photos || []).map(function (ph) { return { id: ph.id, path: ph.path }; }) }; });
+  }
+  /* 日程统计 */
+  if (path.indexOf('/api/schedule/stats') >= 0 && data && data.summary) {
+    const tags = {}; (data.pieByTag || []).forEach(function (t) { tags[t.name] = t.value; });
+    return { total: data.summary.totalDone, done: data.summary.totalDone, focus: data.summary.totalSessions, minutes: data.summary.totalMinutes,
+      coins: data.summary.totalCoins, tags: tags, week: (data.last7Days || []).map(function (d) { return d.count; }),
+      hours: (data.startHourDist || []).map(function (h) { return h.count; }) };
+  }
+  /* 桌面分区 */
+  if (path.indexOf('/api/desktop/zones') >= 0 && Array.isArray(data)) {
+    return data.map(function (z) { return { id: z.id, name: z.zoneName, exts: z.extensions, target: z.targetDir, enabled: z.enabled }; });
+  }
+  /* 日程列表 */
+  if (method === 'GET' && path.indexOf('/api/schedule') === 0 && Array.isArray(data)) {
+    const rep = { ONCE: '一次', DAILY: '每天', WEEKLY: '每周' };
+    const pri = { 1: '高', 2: '中', 3: '低' };
+    return data.map(function (s) { return { id: s.id, title: s.title, time: s.remindAt || '',
+      repeat: rep[s.repeatType] || s.repeatType || '一次', priority: pri[s.priority] !== undefined ? pri[s.priority] : (s.priority || '中'),
+      done: s.status === 'DONE', tags: s.tag ? String(s.tag).split(',').filter(Boolean) : [] }; });
+  }
+  return data;
+}
+async function api(method, path, body) {
+  if (demo) return mockApi(method, path, body);
+  /* ── 请求体改写(前端字段 → 后端字段) ── */
+  if (body && typeof body === 'object') {
+    if (path.indexOf('/api/shop/feed') >= 0 && body.id !== undefined) body = { itemId: body.id };
+    else if (path.indexOf('/api/shop/buy') >= 0 && body.id !== undefined) body = { itemId: body.id };
+    else if (path.indexOf('/api/breeding/request') >= 0 && body.id !== undefined) body = { fatherPetId: body.id };
+    else if (path.indexOf('/api/inbox/message') >= 0) body = { receiverId: body.to, content: body.text };
+    else if (path.indexOf('/api/pet/draw') >= 0) body = { petName: body.name, typeCode: body.code };
+    else if (path.indexOf('/api/settings/allow-breeding') >= 0) body = { value: !!body.allowBreeding };
+    else if (path.indexOf('/api/settings/app-monitor') >= 0) body = { value: !!body.appMonitor };
+    else if (path.indexOf('/api/reports') >= 0) body = { targetUserId: body.target, content: body.text || body.chat || '举报' };
+    else if (path.indexOf('/api/keys') >= 0 && method === 'POST') body = { provider: provCode(body.provider), key: body.key, baseUrl: body.address, modelName: body.model };
+    else if (path.indexOf('/api/admin/play-modes') >= 0 && method === 'POST') body = { name: body.name, icon: body.emoji || '', image: '', mood: body.mood, hunger: body.hunger, exp: body.xp };
+    else if (path.indexOf('/api/admin/shop-items') >= 0 && method === 'POST') body = { itemName: body.name, itemType: body.type, species: zhCode(body.species), image: body.icon || '', price: body.price, hungerRestore: body.hunger, moodRestore: body.mood, minLevel: body.unlockLevel || 1, enabled: 1 };
+    else if (path.indexOf('/api/admin/shop-items/') >= 0 && method === 'PUT' && body.listed !== undefined) body = { enabled: body.listed ? 1 : 0 };
+    else if (path.indexOf('/api/schedule') >= 0 && (method === 'POST' || method === 'PUT')) {
+      if (method === 'PUT' && path === '/api/schedule' && body.id) { path = '/api/schedule/' + body.id; }
+      body = schedBody(body);
+    }
+  }
+  let res;
+  try {
+    res = await fetch(API_BASE + path, {
+      method,
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+      body: body ? JSON.stringify(body) : undefined
+    });
+  } catch (e) { enterDemo(); return mockApi(method, path, body); }
+  let json;
+  try { json = await res.json(); } catch (e) { json = { code: -1, msg: '响应解析失败' }; }
+  if (json.code !== 200) throw new Error(json.msg || '请求失败');
+  console.log('[api]', method, path);
+  return shimData(method, path, json.data, body);
+}
+function enterDemo() {
+  if (demo) return;
+  demo = true;
+  $('#demoBanner').style.display = 'flex';
+  toast('后端未连接，已切换演示模式', 'info');
+}
+
+/* ═══════════════ 演示数据与模拟接口 ═══════════════ */
+let MOCK = {
+  coins: 1280,
+  pet: null,
+  playModes: ['抚摸','跑步','学习','玩球','散步','听音乐','跳舞','捉迷藏','晒太阳','扑蝶'],
+  schedules: [
+    { id: 1, title: '背 30 个单词', time: '2026-06-02T08:00', repeat: '每天', priority: '高', tags: ['学习'], done: 0 },
+    { id: 2, title: '运动半小时', time: '2026-06-02T19:30', repeat: '每天', priority: '中', tags: ['健康'], done: 0 },
+    { id: 3, title: '整理桌面文件', time: '2026-06-03T10:00', repeat: '一次', priority: '低', tags: ['工作'], done: 1 }
+  ],
+  records: [
+    { id: 1, minutes: 30, date: '2026-06-01', done: 1 },
+    { id: 2, minutes: 60, date: '2026-05-31', done: 1 },
+    { id: 3, minutes: 30, date: '2026-05-30', done: 0 }
+  ],
+  items: [
+    { id: 1, name: '小鱼干', type: 'food', species: '通用', price: 50, hunger: 20, mood: 5, lv: 1, icon: 'fish' },
+    { id: 2, name: '胡萝卜', type: 'food', species: '兔', price: 40, hunger: 15, mood: 3, lv: 1, icon: 'carrot' },
+    { id: 3, name: '鲜肉包', type: 'food', species: '通用', price: 80, hunger: 35, mood: 6, lv: 3, icon: 'meat' },
+    { id: 4, name: '营养膏', type: 'food', species: '通用', price: 150, hunger: 60, mood: 10, lv: 5, icon: 'bottle' },
+    { id: 5, name: '绒毛球', type: 'toy', species: '猫', price: 120, hunger: 0, mood: 25, lv: 4, icon: 'ball' },
+    { id: 6, name: '小铃铛', type: 'toy', species: '通用', price: 90, hunger: 0, mood: 15, lv: 2, icon: 'bell' },
+    { id: 7, name: '宠物小窝', type: 'furniture', species: '通用', price: 300, hunger: 0, mood: 30, lv: 6, icon: 'house' },
+    { id: 8, name: '金色皇冠', type: 'furniture', species: '通用', price: 800, hunger: 0, mood: 50, lv: 8, icon: 'crown' }
+  ],
+  inventory: [
+    { id: 1, name: '小鱼干', icon: 'fish', count: 3, hunger: 20 },
+    { id: 2, name: '胡萝卜', icon: 'carrot', count: 5, hunger: 15 }
+  ],
+  market: [
+    { id: 1, code: 'CAT', sex: 'MALE', name: '团子', owner: 'admin2@测试', rare: '史诗', listed: true, personality: '黏人又贪吃', lv: 8, hunger: 80, mood: 90 },
+    { id: 2, code: 'RABBIT', sex: 'FEMALE', name: '棉棉', owner: 'tester1@小明', rare: '稀有', listed: true, personality: '胆小，爱躲猫猫', lv: 5, hunger: 60, mood: 75 },
+    { id: 3, code: 'DOG', sex: 'MALE', name: '旺财', owner: 'tester2@阿伟', rare: '普通', listed: true, personality: '精力旺盛', lv: 3, hunger: 90, mood: 85 },
+    { id: 4, code: 'DRAGON', sex: 'FEMALE', name: '云朵', owner: 'admin1@管理员', rare: '传说', listed: true, personality: '高冷但护主', lv: 12, hunger: 70, mood: 80 }
+  ],
+  breedRecords: [
+    { id: 1, pet: '团子 × 棉棉', status: '怀孕中 · 剩余 2 天', date: '2026-06-01' },
+    { id: 2, pet: '云朵 × 旺财', status: '待对方确认', date: '2026-05-28' }
+  ],
+  hatchlings: [
+    { id: 1, code: 'CAT', sex: 'FEMALE', rare: '稀有', personality: '安静', status: '托管中', lv: 1 },
+    { id: 2, code: 'DOG', sex: 'MALE', rare: '普通', personality: '活泼', status: '欠费冻结', lv: 1 }
+  ],
+  friends: [
+    { id: 1, code: 'DOG', sex: 'MALE', nick: '阿伟', username: 'tester2', since: '2026-05-20' },
+    { id: 2, code: 'RABBIT', sex: 'FEMALE', nick: '小明', username: 'tester1', since: '2026-05-12' }
+  ],
+  inbox: [
+    { id: 1, type: '配种申请', from: 'tester2', code: 'DOG', sex: 'MALE', text: '想和你的宠物配种', unread: 1, state: 'pending' },
+    { id: 2, type: '好友申请', from: 'tester1', code: 'RABBIT', sex: 'FEMALE', text: '加个好友一起玩～', unread: 1, state: 'pending' },
+    { id: 3, type: '聊天', from: 'tester2', code: 'DOG', sex: 'MALE', text: '你喂它了吗？', unread: 0, state: 'done' }
+  ],
+  gravestones: [
+    { id: 1, name: '小白', code: 'RABBIT', sex: 'FEMALE', personality: '温柔', days: 32, died: '2026-05-10', reflected: 1, content: '谢谢你陪我走过一个月，我会记得你的。' }
+  ],
+  albums: [
+    { id: 1, name: '小橘', code: 'CAT', sex: 'MALE', photos: [] },
+    { id: 2, name: '糯糯', code: 'RABBIT', sex: 'FEMALE', photos: [] }
+  ],
+  chat: [
+    { date: '2026-06-01', items: [
+      { who: 'pet', text: '今天也要加油哦，我陪着你～', time: '09:12' },
+      { who: 'me', text: '好！今天开始背单词', time: '09:13' },
+      { who: 'pet', text: '那我去帮你放首轻音乐吧 🎵', time: '09:14' }
+    ]},
+    { date: '2026-06-02', items: [
+      { who: 'me', text: '晚安', time: '23:40' },
+      { who: 'pet', text: '晚安，做个好梦 🌙', time: '23:40' }
+    ]}
+  ],
+  settings: { allowBreeding: true, appMonitor: false },
+  keys: [{ id: 1, provider: 'DeepSeek', address: 'https://api.deepseek.com', model: 'deepseek-chat', masked: 'sk-****8f' }],
+  providers: [
+    { n: 'DeepSeek', addr: 'https://api.deepseek.com', m: 'deepseek-chat' }, { n: '通义千问', addr: 'https://dashscope.aliyuncs.com', m: 'qwen-plus' },
+    { n: '智谱 GLM', addr: 'https://open.bigmodel.cn/api/paas', m: 'glm-4' }, { n: '月之暗面', addr: 'https://api.moonshot.cn', m: 'moonshot-v1-8k' },
+    { n: '百度千帆', addr: 'https://qianfan.baidubce.com', m: 'ernie-4.0' }, { n: '讯飞星火', addr: 'https://spark-api.xf-yun.com', m: 'spark-4.0' },
+    { n: '腾讯混元', addr: 'https://api.hunyuan.cloud.tencent.com', m: 'hunyuan-turbo' }, { n: '字节豆包', addr: 'https://ark.cn-beijing.volces.com', m: 'doubao-pro-32k' },
+    { n: 'OpenAI', addr: 'https://api.openai.com', m: 'gpt-4o' }, { n: 'Anthropic', addr: 'https://api.anthropic.com', m: 'claude-3-5-sonnet' },
+    { n: 'Google Gemini', addr: 'https://generativelanguage.googleapis.com', m: 'gemini-1.5-pro' }, { n: 'Mistral', addr: 'https://api.mistral.ai', m: 'mistral-large' },
+    { n: 'Groq', addr: 'https://api.groq.com', m: 'llama-3.3-70b' }, { n: 'Ollama(本地)', addr: 'http://localhost:11434', m: 'llama3' }
+  ],
+  zones: [
+    { id: 1, name: '文档', exts: '.doc,.docx,.pdf,.txt' },
+    { id: 2, name: '图片', exts: '.png,.jpg,.jpeg,.gif' },
+    { id: 3, name: '压缩包', exts: '.zip,.rar,.7z' }
+  ],
+  stats: { users: 128, pets: 156, todayFocus: 342, coins: 45200 },
+  users: [
+    { id: 1, name: 'admin1', role: 'ADMIN', status: '启用', coins: 99999 },
+    { id: 2, name: 'tester1', role: 'USER', status: '启用', coins: 320 },
+    { id: 3, name: 'tester2', role: 'USER', status: '启用', coins: 180 },
+    { id: 4, name: 'tester3', role: 'USER', status: '禁用', coins: 0 },
+    { id: 5, name: 'newbie01', role: 'USER', status: '启用', coins: 50 }
+  ],
+  adminPets: [
+    { owner: 'tester1', name: '糯糯', code: 'RABBIT', sex: 'FEMALE', personality: '温柔', lv: 4, hunger: 60, mood: 80, coins: 320, status: '正常' },
+    { owner: 'tester2', name: '旺财', code: 'DOG', sex: 'MALE', personality: '活泼', lv: 3, hunger: 90, mood: 85, coins: 180, status: '正常' },
+    { owner: 'tester3', name: '小灰', code: 'RAT', sex: 'MALE', personality: '胆小', lv: 2, hunger: 5, mood: 20, coins: 0, status: '病危' }
+  ],
+  reports: [
+    { id: 1, from: 'tester1', target: 'tester2', text: '私聊发送骚扰内容', chat: '「你有病吧？」', status: '待处理' },
+    { id: 2, from: 'tester2', target: 'tester3', text: '恶意举报他人', chat: '「垃圾」', status: '待处理' }
+  ],
+  shopItems: [],
+  pm: null, timer: null,
+  hunger: 70, mood: 85, xp: 120,
+  pendingReflection: null,
+  reflectionQs: ['你觉得自己还有哪些话想对它说？', '它离开后，你学会了什么？']
+};
+function mockApi(method, path, body) {
+  const M = MOCK;
+  console.log('[mock]', method, path);
+  const qs = Object.fromEntries(new URLSearchParams((path.split('?')[1] || '')).entries());
+  const clean = path.split('?')[0];
+  const p = clean.replace(/\/\d+/g, '/:id');
+  const u = user || {};
+  switch (p) {
+    case '/api/auth/login': u.role = /^admin/.test(body.username) ? 'ADMIN' : 'USER'; return { token: 'demo-' + body.username, user: { username: body.username, role: u.role } };
+    case '/api/auth/register': return { token: 'demo-' + body.username, user: { username: body.username, role: 'USER' } };
+    case '/api/auth/register-code': return {};
+    case '/api/auth/forgot/question': return { question: '你的小学名称是？' };
+    case '/api/auth/forgot': return {};
+    case '/api/pet/my': return M.pet ? { ...M.pet, coins: M.coins, hunger: M.hunger, mood: M.mood, xp: M.xp } : null;
+    case '/api/pet/draw': return M.pet = { code: body.code, sex: body.sex, name: body.name, stage: '幼年', age: 1, lv: 1, personality: '好奇', rare: '普通', hunger: 80, mood: 90 };
+    case '/api/pet/play-modes': return M.playModes;
+    case '/api/pet/play': M.mood = Math.min(100, M.mood + 8); M.hunger = Math.max(0, M.hunger - 4); M.xp += 6; return { mood: M.mood, hunger: M.hunger, xp: M.xp };
+    case '/api/pet/listed': M.pet.listed = body.listed; return { listed: body.listed };
+    case '/api/admin/switch-pet': M.pet = { ...M.pet, code: body.code, sex: body.sex, personality: body.personality }; return M.pet;
+    case '/api/schedule': if (method === 'POST') { M.schedules.unshift({ id: Date.now(), ...body, done: 0 }); } else { const s = M.schedules.find(x => x.id == body.id); if (s) Object.assign(s, body); } return M.schedules;
+    case '/api/schedule/:id': if (method === 'DELETE') { M.schedules = M.schedules.filter(x => x.id != clean.split('/').pop()); return {}; }
+    case '/api/schedule/:id/done': { const s = M.schedules.find(x => x.id == clean.split('/')[3]); if (s) s.done = 1; return {}; }
+    case '/api/schedule/stats': return { total: 21, done: 14, focus: 12, minutes: 640, coins: 96, tags: { 学习: 8, 健康: 5, 工作: 4, 娱乐: 4 }, week: [4, 5, 3, 6, 5, 4, 3], weekMins: [120, 150, 90, 180, 150, 120, 90] };
+    case '/api/pomodoro/start': M.pm = { id: Date.now(), total: body.minutes * 60, remain: body.minutes * 60, paused: false, pauses: 0, done: false }; return M.pm;
+    case '/api/pomodoro/my': return M.records;
+    case '/api/pomodoro/:id/pause': M.pm.paused = true; M.pm.pauses++; return M.pm;
+    case '/api/pomodoro/:id/resume': M.pm.paused = false; return M.pm;
+    case '/api/pomodoro/:id/complete': M.coins += Math.round(M.pm.total / 60); M.records.unshift({ id: Date.now(), minutes: Math.round(M.pm.total / 60), date: new Date().toISOString().slice(0, 10), done: 1 }); M.pm = null; return { coins: M.coins };
+    case '/api/pomodoro/:id/abandon': M.pm = null; return {};
+    case '/api/shop/items': return M.items;
+    case '/api/shop/buy': { const it = M.items.find(x => x.id == body.id); M.coins -= it.price; M.inventory.push({ id: it.id, name: it.name, icon: it.icon, count: 1, hunger: it.hunger }); return { coins: M.coins }; }
+    case '/api/shop/inventory': return M.inventory;
+    case '/api/shop/feed': { const it = M.inventory.find(x => x.id == body.id); if (it) { it.count--; M.hunger = Math.min(100, M.hunger + it.hunger); if (it.count <= 0) M.inventory = M.inventory.filter(x => x.id != body.id); } return { hunger: M.hunger, inventory: M.inventory }; }
+    case '/api/breeding/market': return M.market;
+    case '/api/breeding/my': return M.breedRecords;
+    case '/api/breeding/request': return {};
+    case '/api/hatchling/my': return M.hatchlings;
+    case '/api/hatchling/claim': return {};
+    case '/api/hatchling/gift': return {};
+    case '/api/friends': return M.friends;
+    case '/api/friends/:id': if (method === 'DELETE') { M.friends = M.friends.filter(x => x.id != clean.split('/').pop()); return {}; } return {};
+    case '/api/friends/request': return {};
+    case '/api/users/search': return M.users.filter(x => !qs.keyword || x.username.includes(qs.keyword) || x.name.includes(qs.keyword));
+    case '/api/inbox': return M.inbox;
+    case '/api/inbox/:id/accept': { const m = M.inbox.find(x => x.id == clean.split('/')[3]); if (m) m.state = 'done'; return {}; }
+    case '/api/inbox/:id/reject': M.inbox = M.inbox.filter(x => x.id != clean.split('/')[3]); return {};
+    case '/api/inbox/:id/read': { const m = M.inbox.find(x => x.id == clean.split('/')[3]); if (m) m.unread = 0; return {}; }
+    case '/api/inbox/message': return {};
+    case '/api/inbox/conversation': if (method === 'DELETE') return {};
+    case '/api/blacklist/:id': return {};
+    case '/api/reports': if (method === 'POST') { M.reports.push({ id: Date.now(), from: u.username || 'me', target: body.target, text: body.text, chat: body.chat || '', status: '待处理' }); } return M.reports;
+    case '/api/desktop/scan': return { files: ['工作报告_final(2).docx', '照片_023.jpg', '会议纪要.pdf', 'old_archive.zip', '草稿_未命名.txt'], total: 37 };
+    case '/api/desktop/organize/record': return {};
+    case '/api/desktop/zones': if (method === 'GET') return M.zones; if (method === 'POST') { M.zones.push({ id: Date.now(), ...body }); return M.zones; }
+    case '/api/desktop/zones/:id': if (method === 'DELETE') { M.zones = M.zones.filter(x => x.id != clean.split('/').pop()); return M.zones; }
+    case '/api/gravestones': return M.gravestones;
+    case '/api/reflection/questions': return M.reflectionQs;
+    case '/api/reflection/submit': M.pendingReflection = null; return {};
+    case '/api/photo/albums': return M.albums.filter(a => !qs.keyword || a.name.includes(qs.keyword));
+    case '/api/photo/upload': { const a = M.albums[0]; a.photos.unshift(body.photo || ''); return {}; }
+    case '/api/photo/:id': if (method === 'DELETE') { M.albums.forEach(a => { a.photos = a.photos.filter((x, i) => i != clean.split('/').pop()); }); return {}; }
+    case '/api/chat/history': return M.chat;
+    case '/api/chat/message': { const today = new Date().toISOString().slice(0, 10); const d = M.chat.find(x => x.date === today); const item = { who: 'me', text: body.text, time: new Date().toTimeString().slice(0, 5) }; if (d) d.items.push(item); else M.chat.push({ date: today, items: [item] }); return M.chat; }
+    case '/api/chat/voice': return {};
+    case '/api/settings': return M.settings;
+    case '/api/settings/allow-breeding': M.settings.allowBreeding = body.allowBreeding; return M.settings;
+    case '/api/settings/app-monitor': M.settings.appMonitor = body.appMonitor; return M.settings;
+    case '/api/keys/providers': return M.providers;
+    case '/api/keys': if (method === 'GET') return M.keys; if (method === 'POST') { M.keys.push({ id: Date.now(), provider: body.provider, address: body.address, model: body.model, masked: 'sk-****' + Math.random().toString(36).slice(-3) }); return M.keys; }
+    case '/api/keys/:id': if (method === 'DELETE') { M.keys = M.keys.filter(x => x.id != clean.split('/').pop()); return M.keys; }
+    case '/api/admin/stats': return M.stats;
+    case '/api/admin/users': return M.users;
+    case '/api/admin/users/:id': if (method === 'DELETE') { M.users = M.users.filter(x => x.id != clean.split('/').pop()); return {}; } return M.users;
+    case '/api/admin/users/:id/status': { const x = M.users.find(u2 => u2.id == clean.split('/')[4]); if (x) x.status = x.status === '启用' ? '禁用' : '启用'; return M.users; }
+    case '/api/admin/users/:id/reset-password': return {};
+    case '/api/admin/pets': return M.adminPets;
+    case '/api/admin/shop-items': if (method === 'POST') { M.items.unshift({ id: Date.now(), ...body, lv: body.unlockLevel || 1, icon: body.icon || 'fish' }); return M.items; }
+    case '/api/admin/shop-items/:id': if (method === 'PUT') { const it = M.items.find(x => x.id == body.id); if (it) { it.price = body.price; it.listed = body.listed; } return M.items; }
+    case '/api/admin/upload': return { url: 'demo://upload/' + Date.now() };
+    case '/api/admin/play-modes': if (method === 'GET') return M.playModes; if (method === 'POST') { M.playModes.push(body.name); return M.playModes; }
+    case '/api/admin/play-modes/:id': if (method === 'DELETE') { M.playModes = M.playModes.filter((x, i) => i != clean.split('/').pop()); return M.playModes; }
+    case '/api/admin/reports': return M.reports;
+    case '/api/admin/reports/:id/resolve': if (body.action === 'blacklist') { const r = M.reports.find(x => x.id == clean.split('/')[3]); if (r) r.status = '已拉黑'; return M.reports; } if (body.action === 'reject') { M.reports = M.reports.filter(x => x.id != clean.split('/')[3]); return M.reports; }
+    case '/api/admin/settings/chat-memory': return {};
+    case '/api/push/companion': return {}; case '/api/push/naughty': return {};
+    default: return {};
+  }
+}
+
+/* ═══════════════ 认证 ═══════════════ */
+function authForm(kind) {
+  const f = (id, label, ph, type = 'text') => `<div class="field"><label>${label}</label><input class="input" id="${id}" type="${type}" placeholder="${ph}"></div>`;
+  if (kind === 'login') return `<div class="stack">${f('lgUser','用户名','请输入用户名')}${f('lgPass','密码','请输入密码','password')}<button class="btn btn-primary btn-block star" data-act="login">登 录</button></div>`;
+  if (kind === 'forgot') return `<div class="stack">${f('fgUser','用户名','请输入用户名')}<button class="btn btn-soft btn-block" data-act="forgot-q">获取密保问题</button><div id="fgQ" style="font-size:12.5px;color:var(--muted)"></div>${f('fgAns','密保答案','请输入密保答案')}${f('fgPass','新密码','请输入新密码','password')}<button class="btn btn-primary btn-block star" data-act="forgot">重置密码</button></div>`;
+  const qs = ['你的小学名称','你的宠物名字','你母亲的姓氏','你最喜欢的食物'];
+  return `<div class="stack">${f('rgUser','用户名','2-20 位字符')}${f('rgNick','昵称','怎么称呼你')}${f('rgMail','邮箱','用于接收验证码','email')}
+    <div class="row"><div style="flex:1">${f('rgCode','验证码','6 位数字')}</div><button class="btn btn-ghost btn-sm" style="align-self:flex-end;margin-bottom:2px" data-act="send-code">发送验证码</button></div>
+    ${f('rgPass','密码','至少 6 位','password')}${f('rgPass2','确认密码','再次输入密码','password')}
+    <div class="field"><label>密保问题</label><select class="input" id="rgQ">${qs.map(q => `<option>${q}</option>`).join('')}</select></div>
+    ${f('rgAns','密保答案','用于找回密码')}
+    <button class="btn btn-primary btn-block star" data-act="register">注 册</button></div>`;
+}
+function renderAuth(kind = 'login') {
+  $$('[data-auth-tab]').forEach(b => b.classList.toggle('active', b.dataset.authTab === kind));
+  $('#authForms').innerHTML = authForm(kind);
+}
+function setSession(t, u) {
+  token = t; user = u;
+  try { localStorage.setItem('dp_token', t); localStorage.setItem('dp_user', JSON.stringify(u)); } catch (e) {}
+  /* 融合:同步给悬浮宠物窗与主进程推送 */
+  try { localStorage.setItem('pet_token', t); localStorage.setItem('pet_user', JSON.stringify(u)); } catch (e2) {}
+  if (window.petAPI && window.petAPI.setToken) window.petAPI.setToken(t);
+  $('#authView').style.display = 'none';
+  $('#appView').style.display = 'flex';
+  $('#appView').classList.add('active');
+  buildTopbar();
+  enterScene('home');
+  initFloatPet();
+  greeting();
+  toast('欢迎回来，' + (u.nick || u.username));
+}
+function logout() {
+  token = ''; user = null;
+  try { localStorage.removeItem('dp_token'); localStorage.removeItem('dp_user'); localStorage.removeItem('pet_token'); localStorage.removeItem('pet_user'); } catch (e) {}
+  if (window.petAPI && window.petAPI.setToken) window.petAPI.setToken(null);
+  $('#appView').style.display = 'none';
+  $('#authView').style.display = 'block';
+  renderAuth('login');
+}
+function greeting() {
+  let last = '';
+  try { last = localStorage.getItem('dp_greet') || ''; } catch (e) {}
+  const today = new Date().toDateString();
+  if (last !== today) {
+    try { localStorage.setItem('dp_greet', today); } catch (e) {}
+    setTimeout(() => say('早上好呀！今天也一起加油～', 3200), 600);
+  }
+}
+
+/* ═══════════════ 场景与页面路由 ═══════════════ */
+const SCENES = [
+  { id: 'home', n: '小屋', icon: 'home', scene: 'home' },
+  { id: 'study', n: '书房', icon: 'book', scene: 'study' },
+  { id: 'shop', n: '商店', icon: 'bag', scene: 'shop' },
+  { id: 'garden', n: '花园', icon: 'chat', scene: 'garden' },
+  { id: 'tools', n: '玩法', icon: 'puzzle', scene: 'tools' },
+  { id: 'settings', n: '设置', icon: 'gear', scene: 'settings' }
+];
+const SCENE_PAGES = {
+  home: [['pet', '我的宠物']],
+  study: [['schedule', '日程'], ['pomodoro', '番茄钟']],
+  shop: [['shop', '商店'], ['bag', '背包']],
+  garden: [['chat', '对话']],
+  tools: [['breed', '配种市场'], ['hatch', '托管所'], ['friends', '好友'], ['inbox', '收件箱'], ['grave', '墓地'], ['desktop', '桌面整理'], ['camera', '拍照相册']],
+  settings: [['settings', '设置']]
+};
+let curScene = 'home', curPage = 'pet', adminTab = 'stats';
+
+function buildRail() {
+  const slots = $('#railSlots');
+  slots.innerHTML = SCENES.map(s => `<button class="rail-slot" data-scene="${s.id}"><img class="si" src="${glyphData(s.icon)}" alt=""><span>${s.n}</span></button>`).join('');
+  positionBall();
+}
+function railSlotX(i) {
+  const rail = $('#rail');
+  const slots = $$('#railSlots .rail-slot');
+  const rw = rail.clientWidth, sw = rw / SCENES.length;
+  return sw * i + sw / 2;
+}
+function positionBall(animate = true) {
+  const idx = SCENES.findIndex(s => s.id === curScene);
+  const ball = $('#railBall');
+  const x = railSlotX(Math.max(0, idx)) - ball.offsetWidth / 2;
+  ball.style.left = x + 'px';
+  $('#railBallIco').src = glyphData(SCENES[idx].icon);
+  $$('#railSlots .rail-slot').forEach((el, i) => el.classList.toggle('on', i === idx));
+}
+function enterScene(id, opts = {}) {
+  curScene = id;
+  const pages = SCENE_PAGES[id];
+  if (opts.page) curPage = opts.page;
+  else if (!pages.some(p => p[0] === curPage)) curPage = pages[0][0];
+  // 管理后台入口对所有人可见(非管理员点进去会看到登录提示)
+  if (id === 'settings' && !SCENE_PAGES.settings.some(p => p[0] === 'admin')) {
+    SCENE_PAGES.settings.push(['admin', '管理后台']);
+  }
+  positionBall();
+  drawScene(SCENES.find(s => s.id === id).scene);
+  renderSubPills();
+  showPage(curPage);
+  $('#speech').classList.remove('show');
+  layoutScenePet();
+}
+function renderSubPills() {
+  const pages = SCENE_PAGES[curScene];
+  $('#subPills').innerHTML = pages.map(([k, n]) => {
+    let badge = '';
+    if (k === 'inbox') { const un = MOCK.inbox.filter(m => m.unread).length; if (un) badge = `<span class="badge b-red" style="margin-left:4px">${un}</span>`; }
+    if (k === 'hatch') { const c = MOCK.hatchlings.filter(h => h.status === '托管中').length; if (c) badge = `<span class="badge b-green" style="margin-left:4px">${c}</span>`; }
+    return `<button class="chip ${k === curPage ? 'active' : ''}" data-page="${k}">${n}${badge}</button>`;
+  }).join('');
+}
+function showPage(id) {
+  curPage = id;
+  $$('#subPills .chip').forEach(b => b.classList.toggle('active', b.dataset.page === id));
+  const renderers = {
+    pet: renderPet, schedule: renderSchedule, pomodoro: renderPomodoro, shop: renderShop, bag: renderBag,
+    breed: renderBreeding, hatch: renderHatch, friends: renderFriends, inbox: renderInbox,
+    grave: renderGrave, desktop: renderDesktop, camera: renderCamera, chat: renderChat,
+    settings: renderSettings, admin: renderAdmin
+  };
+  (renderers[id] || renderPet)();
+}
+
+/* ═══════════════ 像素图标库（16×16 glyph → dataURL） ═══════════════ */
+const GLYPHS = {
+  home: ['................','....OO..OO....','...OOOOOOOO...','..OO.OOOO.OO..','.OO..OOOO..OO.','.OO..OOOO..OO.','.OO..OOOO..OO.','.OO..OOOO..OO.','.OO..OOOO..OO.','.OO..OOOO..OO.','.OO..OOOO..OO.','.OO..OOOO..OO.','.OOO.OOOO.OOO.','..OOOOOOOOOO..','....OOOOOO....','................'],
+  book: ['................','.OOOOOOOOOOOO..','.O........OO....','.O.OOOOO..OO....','.O.OOO.O..OO....','.O.O.O.O..OO....','.O.O.OOO..OO....','.O.OOO.O..OO....','.O.O.O.O..OO....','.O.OOO.O..OO....','.O.O.O.O..OO....','.O.OOO.O..OO....','.O.......OO....','.OOOOOOOOOOOO...','................','................'],
+  bag: ['....OOOOOO....','..OOOOOOOOOO..','.OO..OOOO..OO.','.OO..OOOO..OO.','.OOOOOOOOOOOO.','.OOOOOOOOOOOO.','.OO.OOOOOO.OO.','.OO.OOOOOO.OO.','.OO.OOOOOO.OO.','.OO.OOOOOO.OO.','.OO.OOOOOO.OO.','.OO.OOOOOO.OO.','.OO........OO.','.OOOOOOOOOOOO.','................','................'],
+  chat: ['................','..OOOOOOOOOO..','.OOOOOOOOOOOO.','.OO........OO.','.OO........OO.','.OO........OO.','.OO........OO.','.OO........OO.','.OO........OO.','.OOOOOOOOOOOO.','..OOOOOOOOOO..','......OO......','.....OOOO.....','....OO..OO....','................','................'],
+  puzzle: ['....OOO.......','...OOOOO......','..OOOOOOOOO...','.OOOOOOOOOOO..','.OOOOOOOOOOO..','.OOOOOOOOOOO..','.OOOOOOOOOOO..','.OOOOOOOOOOO..','..OOOOOOOOO...','...OOOOOOO....','....OOOOO.....','.....OOO......','................','................','................','................'],
+  gear: ['.....OOO......','....OOOOO.....','...OOOOOOO....','OO.OOOOOOO.OO.','OOO.OOOOO.OOO.','OOOOOOOOOOOOO.','OOOOOOOOOOOOO.','OOOOOOOOOOOOO.','OOOOOOOOOOOOO.','OOO.OOOOO.OOO.','OO.OOOOOOO.OO.','...OOOOOOO....','....OOOOO.....','.....OOO......','................','................'],
+  home2:['................','....OOOOOO....','...OOOOOOOO...','..OO.OOOO.OO..','..OO.OOOO.OO..','..OO.OOOO.OO..','..OO.OOOO.OO..','..OO.OOOO.OO..','..OO.OOOO.OO..','..OO.OOOO.OO..','..OO.OOOO.OO..','..OO.OOOO.OO..','..OOOOOOOOOO..','....OOOOOO....','................','................'],
+  heart:['................','..OO....OO....','.OOOO..OOOO...','.OOOOOOOOOOO..','.OOOOOOOOOOO..','.OOOOOOOOOOO..','..OOOOOOOOO...','...OOOOOOO....','....OOOOO.....','.....OOO......','......O.......','................','................','................','................','................'],
+  star: ['.......O.......','......OOO......','......OOO......','.OOOOOOOOOOOOO.','.OOOOOOOOOOOOO.','..OOOOOOOOOOO..','...OOOOOOOOO...','....OOOOOOO....','.....OOOOO.....','......OOO......','.......O.......','................','................','................','................','................'],
+  fish: ['................','................','................','...OOOO........','..OOOOOOO......','.OOOOOOOOOOO...','.OOOOOOOOOOOOO.','.OOOOOOOOOOOOO.','.OOOOOOOOOOO...','..OOOOOOO......','...OOOO........','................','................','................','................','................'],
+  bone: ['................','..OOO....OOO...','.OOOOOOOOOOOOO.','.OOOOOOOOOOOOO.','.OOOOOOOOOOOOO.','..OOO....OOO...','................','................','................','................','................','................','................','................','................','................'],
+  clock:['................','....OOOOOO....','..OOOOOOOOOO..','.OOOOOOOOOOOO.','.OOO.OOOO.OOO.','.OO.OOOOOO.OO.','.OO.OOOOOO.OO.','.OO.OOOOOO.OO.','.OO.OOO.OO.OO.','.OOO.OOO.OOO.','.OOOOOOOOOOOO.','..OOOOOOOOOO..','....OOOOOO....','................','................','................'],
+  egg: ['................','......OO......','.....OOOO.....','....OOOOOO....','...OOOOOOOO...','..OOOOOOOOOO..','.OOOOOOOOOOOO.','.OOOOOOOOOOOO.','.OOOOOOOOOOOO.','..OOOOOOOOOO..','...OOOOOOOO...','....OOOOOO....','.....OOOO.....','......OO......','................','................'],
+  paw: ['................','..OO....OO.....','.OOOO..OOOO....','.OOOO..OOOO....','..OO....OO.....','................','..OO....OO.....','.OOOO..OOOO....','.OOOO..OOOO....','..OO....OO.....','................','................','................','................','................','................'],
+  zzz: ['................','...OO..........','..OOOOO........','...OOOOO.......','..OOOOO........','.OOOOO........','.OOOO..........','................','................','................','................','................','................','................','................','................'],
+  book2:['................','.OOOOOOOOOO....','.O........OO...','.O.OOOOO..OO...','.O.OOO.O..OO...','.O.O.O.O..OO...','.O.OOO.O..OO...','.O.O.O.O..OO...','.O.OOO.O..OO...','.O.O.O.O..OO...','.O.OOO.O..OO...','.O........OO...','.OOOOOOOOOO....','................','................','................'],
+  carrot:['................','.....OO........','....OOOO.......','...OOOOOO......','..OOOOOOOO.....','.OOOOOOOOOO....','.OOOOOOOOOO....','.OOOOOOOOOO....','..OOOOOOOO.....','...OOOOOO......','....OOOO.......','................','................','................','................','................'],
+  meat: ['................','................','................','....OOOOOO.....','..OOOOOOOOOO...','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','..OOOOOOOOOO...','....OOOOOO.....','................','................','................','................','................'],
+  bottle:['................','....OOOOOO.....','...OOOOOOOO....','...OOOOOOOO....','...OOOOOOOO....','...OOOOOOOO....','...OOOOOOOO....','...OOOOOOOO....','...OOOOOOOO....','...OOOOOOOO....','..OOOOOOOOOO...','..OOOOOOOOOO...','..OOOOOOOOOO...','..OOOOOOOOOO...','................','................'],
+  ball: ['................','................','....OOOOOO.....','..OOOOOOOOOO...','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','..OOOOOOOOOO...','....OOOOOO.....','................','................','................','................','................','................'],
+  bell: ['................','.....OOOO......','...OOOOOOOO....','..OOOOOOOOOO...','..OOOOOOOOOO...','..OOOOOOOOOO...','..OOOOOOOOOO...','..OOOOOOOOOO...','..OOOOOOOOOO...','..OOOOOOOOOO...','.OOOOOOOOOOOO..','..OOOOOOOOOO...','...OOOOOOOO....','....OOOOOO.....','................','................'],
+  crown:['................','...O..O..O.....','..OOO.OOO.OO...','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','..OOOOOOOOOO...','...OOOOOOOO....','....OOOOOO.....','................','................'],
+  camera:['................','....OOOOOO.....','..OOOOOOOOOO...','.OOOOOOOOOOOO..','.OOO.OOOO.OOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','..OOOOOOOOOO...','....OOOOOO.....','................','................','................'],
+  grave:['................','...OOOOOOOOO...','...O.OOO.O.O...','...OOOOOOOOO...','...OOOOOOOOO...','...OOOOOOOOO...','...OOOOOOOOO...','...OOOOOOOOO...','...OOOOOOOOO...','...OOOOOOOOO...','...OOOOOOOOO...','...OOOOOOOOO...','..OOOOOOOOOOO..','.OOOOOOOOOOOOO.','................','................'],
+  gear2:['................','.....OOO.......','....OOOOO......','...OOOOOOO.....','OO.OOOOOOO.OO..','OOO.OOOOO.OOO..','OOOOOOOOOOOOO..','OOOOOOOOOOOOO..','OOOOOOOOOOOOO..','OOO.OOOOO.OOO..','OO.OOOOOOO.OO..','...OOOOOOO.....','....OOOOO......','.....OOO.......','................','................'],
+  wrench:['................','.....OOOO......','....OOOOOO.....','...OOOOOOO.....','...OOOOOOO.....','...OOOOOOO.....','....OOOOOO.....','.....OOOOO.....','......OOOOO....','.......OOOOO...','........OOOO...','.........OOO...','..........OO...','................','................','................'],
+  mail: ['................','..OOOOOOOOOO...','.OOOOOOOOOOOO..','.OO.OOOOOO.OO..','.OOO.OOOO.OOO..','.OOOO.OO.OOOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','.OOOOOOOOOOOO..','..OOOOOOOOOO...','................','................','................','................','................','................'],
+  chat2:['................','..OOOOOOOOOO...','.OOOOOOOOOOOO..','.OO........OO..','.OO........OO..','.OO........OO..','.OO........OO..','.OO........OO..','.OOOOOOOOOOOO..','..OOOOOOOOOO...','....OOOOOO.....','....OOOOOO.....','...OO....OO....','................','................','................']
+};
+function glyphData(name, color) {
+  const key = name + '_' + (color || 'd');
+  if (glyphCache[key]) return glyphCache[key];
+  const g = GLYPHS[name] || GLYPHS.star;
+  const w = g[0].length, h = g.length;
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  const cx = cv.getContext('2d');
+  cx.fillStyle = color || '#4a3a2a';
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (g[y][x] === 'O') cx.fillRect(x, y, 1, 1);
+  glyphCache[key] = cv.toDataURL();
+  return glyphCache[key];
+}
+const glyphCache = {};
+function petStatusIco() {
+  if (!MOCK.pet) return null;
+  if (MOCK.pm && !MOCK.pm.done) return { g: 'clock', c: '#4a8fb0', label: '学习中' };
+  if (MOCK.hunger <= 30) return { g: 'fish', c: '#c96a3a', label: '饿了' };
+  if (MOCK.mood <= 35) return { g: 'zzz', c: '#7a6a5a', label: '无聊' };
+  return { g: 'heart', c: '#e06080', label: '开心' };
+}
+
+/* ═══════════════ 页面：我的宠物 ═══════════════ */
+async function renderPet() {
+  const el = $('#page');
+  try {
+    const pet = await api('GET', '/api/pet/my');
+    if (!pet || !pet.hasPet) {
+      el.innerHTML = `
+        <div class="card" style="max-width:430px;margin:0 auto;text-align:center">
+          <div class="egg" data-act="draw-egg" role="button" aria-label="抽蛋"><img src="${glyphData('egg','#e8b25c')}" style="width:92px;height:92px"></div>
+          <p style="font-size:13.5px;color:var(--muted);margin:6px 0 14px">还没有小伙伴，起个名字抽一枚像素蛋吧（名字只能起一次）</p>
+          <div class="field"><input class="input" id="petName" placeholder="给它起个名字（例如：小橘）" maxlength="12"></div>
+          <button class="btn btn-primary btn-block star" style="margin-top:12px" data-act="draw">🎁 抽蛋并陪伴</button>
+          <div id="refPanel"></div>
+        </div>`;
+      maybeReflection();
+      return;
+    }
+    const isMale = pet.sex === 'MALE';
+    const lv = pet.lv || 1;
+    const rareCls = { 普通: '', 稀有: 'b-green', 史诗: 'b-pink', 传说: 'b-gold' }[pet.rare] || '';
+    const danger = pet.hunger <= 20 || pet.mood <= 20;
+    el.innerHTML = `
+      <div class="page-head row-between"><div><h2>我的宠物</h2><p class="sub">每天记得照顾它 · 按钮越少越轻松</p></div>
+        <div class="row">
+          ${isMale ? (pet.listed ? `<button class="btn btn-ghost btn-sm" data-act="unlist">下架</button>` : `<button class="btn btn-primary btn-sm star" data-act="list">上架到市场</button>`) : `<span class="badge b-pink">雌宠不上架</span>`}
+          <button class="btn btn-ghost btn-sm" data-act="pet-more">⋯</button>
+        </div></div>
+      ${danger ? `<div class="card" style="border-color:color-mix(in oklch,var(--st-mood) 50%,var(--border));background:color-mix(in oklch,var(--st-mood) 10%,var(--surface));color:var(--st-mood);margin-bottom:14px"><b>病危警告！</b> 饥饿/心情过低，请尽快喂食或陪伴（24 小时内可救活）</div>` : ''}
+      <div class="grid g2">
+        <div class="card" style="text-align:center;display:flex;flex-direction:column;align-items:center">
+          <div style="width:150px;margin-top:4px">${petImg(pet.code, pet.sex, 'pet-svg', 150)}</div>
+          <div style="font-family:var(--font-display);font-size:21px;margin-top:6px">${esc(pet.name)}</div>
+          <div class="row" style="justify-content:center;gap:6px;margin-top:6px">
+            <span>${petCodeName(pet.code)}${isMale ? ' · 雄' : ' · 雌'}</span>
+            <span class="badge ${rareCls}">${esc(pet.rare)}</span>
+            <span class="badge">${esc(pet.personality)}</span>
+            <span class="badge b-orange">${esc(pet.stage)}</span>
+            <span class="badge b-gold">Lv.${lv} · ${pet.age} 天</span>
+          </div>
+          <button class="btn btn-soft btn-sm star" style="margin-top:12px" data-act="play-pop">🎮 玩耍</button>
+        </div>
+        <div class="stack">
+          <div class="stat"><span class="k">🍖 饥饿</span><span class="v num">${pet.hunger}<small>/100</small></span><div class="bar"><i style="width:${pet.hunger}%;background:${pet.hunger<=20 ? 'var(--st-mood)' : 'var(--st-hunger)'}"></i></div></div>
+          <div class="stat"><span class="k">💗 心情</span><span class="v num">${pet.mood}<small>/100</small></span><div class="bar"><i style="width:${pet.mood}%;background:${pet.mood<=20 ? 'var(--st-mood)' : 'var(--p-pink)'}"></i></div></div>
+          <div class="stat"><span class="k">🪙 游戏币</span><span class="v num">${pet.coins}<small> 币</small></span></div>
+          <div id="feedQuick" class="row" style="gap:8px;margin-top:4px"></div>
+        </div>
+      </div>
+      <div id="refPanel2"></div>`;
+    loadInventoryQuick();
+    maybeReflection();
+  } catch (e) { el.innerHTML = errPage(e); }
+}
+function playPopover() {
+  api('GET', '/api/pet/play-modes').then(modes => {
+    confirmBox('和它玩点什么？', '<div class="row" style="gap:8px">' + modes.map(m => `<button class="chip" data-act="play" data-mode="${esc(m)}">${esc(m)}</button>`).join('') + '</div>', () => {});
+    $('#modalMask').addEventListener('click', e => {
+      const b = e.target.closest('[data-act="play"]');
+      if (b) { $('#modalMask').classList.remove('show'); doPlay(b.dataset.mode); }
+    }, { once: true });
+  });
+}
+function loadInventoryQuick() {
+  api('GET', '/api/shop/inventory').then(inv => {
+    const box = $('#feedQuick');
+    if (!box) return;
+    box.innerHTML = inv.slice(0, 3).map(it => `<button class="btn btn-soft btn-sm" data-act="feed" data-id="${it.id}">喂${esc(it.name)}</button>`).join('') || '<span style="font-size:12.5px;color:var(--muted)">背包没有食物，去商店买一点吧</span>';
+  }).catch(() => {});
+}
+function maybeReflection() {
+  api('GET', '/api/gravestones').then(gs => {
+    if (!gs || !gs.length || !gs.some(g => !g.reflected)) return;
+    const box = $('#refPanel') || $('#refPanel2');
+    if (!box) return;
+    box.innerHTML = `<div class="card" style="margin-top:14px;border-color:color-mix(in oklch,var(--p-sun) 50%,var(--border))">
+      <b>它还有一些话想对你说（反思）</b>
+      <div class="field" style="margin-top:8px"><textarea class="input" id="refA1" placeholder="问题一：你觉得自己还有哪些话想对它说？"></textarea></div>
+      <div class="field" style="margin-top:8px"><textarea class="input" id="refA2" placeholder="问题二：它离开后，你学会了什么？"></textarea></div>
+      <button class="btn btn-primary btn-sm star" style="margin-top:10px" data-act="submit-ref">提交反思</button></div>`;
+  }).catch(() => {});
+}
+function errPage(e) { return `<div class="card" style="border-color:color-mix(in oklch,var(--st-mood) 45%,var(--border));color:var(--st-mood)">请求失败：${esc(e.message)}</div>`; }
+
+/* ═══════════════ 页面：日程 ═══════════════ */
+async function renderSchedule() {
+  const el = $('#page');
+  const tags = ['学习','工作','健康','娱乐'];
+  el.innerHTML = `
+    <div class="page-head"><h2>日程</h2><p class="sub">完成一条，宠物会为你开心</p></div>
+    <div class="grid g2">
+      <div class="card">
+        <h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:10px" id="schTitle">新建日程</h3>
+        <div class="stack">
+          <div class="field"><label>标题</label><input class="input" id="scTitle" placeholder="例如：背 30 个单词"></div>
+          <div class="field"><label>提醒时间</label><input class="input" id="scTime" type="datetime-local"></div>
+          <div class="g2 grid">
+            <div class="field"><label>重复</label><select class="input" id="scRepeat"><option>一次</option><option>每天</option><option>每周</option></select></div>
+            <div class="field"><label>优先级</label><select class="input" id="scPri"><option>低</option><option>中</option><option>高</option></select></div>
+          </div>
+          <div class="field"><label>标签</label><div class="row" style="gap:6px">${tags.map(t => `<button class="chip" data-tag="${t}">${t}</button>`).join('')}<input class="input" id="scTag" placeholder="自定义" style="max-width:120px"></div></div>
+          <button class="btn btn-primary star" data-act="save-schedule">保存日程</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row-between"><h3 style="font-family:var(--font-display);font-size:16px">统计</h3><button class="btn btn-ghost btn-sm" data-act="sch-stats">⋯ 展开</button></div>
+        <div id="schStats" style="margin-top:10px"></div>
+        <div class="divider"></div>
+        <div class="field"><label>近 7 天完成数</label><div class="bar-chart" id="schBars"></div></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="row-between"><h3 style="font-family:var(--font-display);font-size:16px">日程列表</h3><span class="badge">共 <span id="schCount">0</span> 项</span></div>
+      <div id="schList"></div>
+    </div>`;
+  loadScheduleList();
+  const st = await api('GET', '/api/schedule/stats');
+  $('#schStats').innerHTML = `<div class="grid g2">
+    <div class="stat"><span class="k">累计完成</span><span class="v num">${st.done}</span></div>
+    <div class="stat"><span class="k">专注轮数</span><span class="v num">${st.focus}</span></div>
+    <div class="stat"><span class="k">累计专注</span><span class="v num">${st.minutes}<small> 分钟</small></span></div>
+    <div class="stat"><span class="k">累计币</span><span class="v num">${st.coins}<small> 币</small></span></div></div>`;
+  const max = Math.max(...st.week);
+  $('#schBars').innerHTML = st.week.map((v, i) => `<div class="b"><i style="height:${(v / max) * 100}%"></i><span>周${'一二三四五六日'[i]}</span></div>`).join('');
+}
+async function loadScheduleList() {
+  const list = await api('GET', '/api/schedule');
+  $('#schCount').textContent = list.length;
+  $('#schList').innerHTML = list.map(s => `
+    <div class="list-row">
+      <button class="btn btn-sm ${s.done ? 'btn-soft' : 'btn-ghost'}" data-act="done-sch" data-id="${s.id}">${s.done ? '✅' : '○'}</button>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;${s.done ? 'text-decoration:line-through;color:var(--muted)' : ''}">${esc(s.title)}</div>
+        <div style="font-size:12px;color:var(--muted)">${esc(s.time.replace('T',' '))} · ${esc(s.repeat)} · 优先级 ${esc(s.priority)} ${(s.tags||[]).map(t => `<span class="badge b-orange" style="margin-left:4px">${esc(t)}</span>`).join('')}</div>
+      </div>
+      <div class="ops"><button class="btn btn-ghost btn-sm" data-act="edit-sch" data-id="${s.id}">✏️</button><button class="btn btn-danger btn-sm" data-act="del-sch" data-id="${s.id}">🗑</button></div>
+    </div>`).join('') || '<div class="empty"><div class="e-ico">' + petImg('RABBIT','FEMALE','pet-svg',56) + '</div>还没有日程，先新建一条吧</div>';
+}
+
+/* ═══════════════ 页面：番茄钟 ═══════════════ */
+async function renderPomodoro() {
+  const el = $('#page');
+  el.innerHTML = `
+    <div class="page-head"><h2>番茄钟</h2><p class="sub">学习时宠物会安静坐好，头顶显示倒计时</p></div>
+    <div class="grid g2">
+      <div class="card" style="text-align:center">
+        <div class="timer-num num" id="pmNum">25:00</div>
+        <div style="font-size:12.5px;color:var(--muted);margin-top:8px" id="pmState">未开始 · 宠物正在待机</div>
+        <div class="row" style="justify-content:center;margin-top:14px" id="pmCtl">
+          <div class="field" style="width:140px"><select class="input" id="pmLen"><option value="30">30 分钟</option><option value="60">60 分钟</option><option value="custom">自定义</option></select></div>
+          <div class="field" style="width:100px;display:none" id="pmCustom"><input class="input num" id="pmCustomMin" type="number" min="1" max="180" placeholder="分钟"></div>
+          <button class="btn btn-primary star" data-act="pm-start">▶ 开始专注</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:10px">专注记录</h3>
+        <div class="row" style="margin-bottom:10px">
+          <input class="input" id="recFrom" type="date" style="max-width:140px"><span style="color:var(--muted)">至</span>
+          <input class="input" id="recTo" type="date" style="max-width:140px">
+          <select class="input" id="recSort" style="max-width:150px"><option value="new">新 → 旧</option><option value="old">旧 → 新</option><option value="mins">分钟多 → 少</option></select>
+        </div>
+        <div id="recList"></div>
+      </div>
+    </div>`;
+  loadRecords();
+  if (MOCK.pm && !MOCK.pm.done) renderPmRunning();
+}
+function loadRecords() {
+  api('GET', '/api/pomodoro/my').then(rs => {
+    const from = ($('#recFrom').value || '').slice(0, 10), to = ($('#recTo').value || '').slice(0, 10);
+    const sort = $('#recSort').value;
+    let list = rs.filter(r => (!from || r.date >= from) && (!to || r.date <= to));
+    if (sort === 'old') list = list.slice().reverse();
+    if (sort === 'mins') list = list.slice().sort((a, b) => b.minutes - a.minutes);
+    $('#recList').innerHTML = `<table class="table"><thead><tr><th>日期</th><th>时长</th><th>状态</th></tr></thead><tbody>` +
+      list.map(r => `<tr><td>${r.date}</td><td class="num">${r.minutes} 分钟</td><td>${r.done ? '<span class="badge b-green">已完成</span>' : '<span class="badge">已放弃</span>'}</td></tr>`).join('') +
+      `</tbody></table>` || '<div class="empty">暂无记录</div>';
+  });
+}
+let pmTick = null;
+function renderPmRunning() {
+  const ctl = $('#pmCtl');
+  if (!ctl) return;
+  const pm = MOCK.pm;
+  const mm = Math.floor(pm.remain / 60), ss = pm.remain % 60;
+  $('#pmNum').textContent = String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+  $('#pmNum').classList.toggle('warn', pm.remain <= 300);
+  $('#pmState').textContent = pm.paused ? '已暂停 · 宠物静音中' : '专注中 · 宠物静音中';
+  ctl.innerHTML = `
+    <button class="btn btn-ghost" data-act="pm-pause" ${pm.pauses >= 2 ? 'disabled' : ''}>⏸ 暂停(${2 - pm.pauses})</button>
+    <button class="btn btn-ghost" data-act="pm-resume" ${pm.paused ? '' : 'disabled'}>▶️ 恢复</button>
+    <button class="btn btn-primary" data-act="pm-complete">✅ 完成</button>
+    <button class="btn btn-danger" data-act="pm-abandon">🚫 放弃</button>`;
+  const c = $('#pmCount');
+  c.textContent = mm + ':' + String(ss).padStart(2, '0');
+  c.style.display = 'block';
+}
+function startPmTick() {
+  stopPmTick();
+  pmTick = setInterval(() => {
+    if (MOCK.pm && !MOCK.pm.paused && !MOCK.pm.done) {
+      MOCK.pm.remain--;
+      if (MOCK.pm.remain <= 0) MOCK.pm.remain = 0;
+      renderPmRunning();
+    }
+  }, 1000);
+}
+function stopPmTick() { if (pmTick) { clearInterval(pmTick); pmTick = null; } $('#pmCount').style.display = 'none'; }
+
+/* ═══════════════ 页面：商店 / 背包 ═══════════════ */
+async function renderShop() {
+  const el = $('#page');
+  const pet = await api('GET', '/api/pet/my').catch(() => null);
+  el.innerHTML = `
+    <div class="page-head row-between"><div><h2>商店</h2><p class="sub">游戏币消费 · 管理员不扣币</p></div>
+      <div class="stat" style="min-width:150px"><span class="k">🪙 余额</span><span class="v num">${pet ? pet.coins : 0}</span></div></div>
+    <div class="card"><h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:12px">商品</h3><div class="grid g4" id="shopGrid"></div></div>`;
+  loadShop();
+}
+async function loadShop() {
+  const items = await api('GET', '/api/shop/items');
+  $('#shopGrid').innerHTML = items.map(it => `
+    <div class="shop-card">
+      ${it.lv > 1 ? `<span class="badge b-red lock">🔒 Lv${it.lv}</span>` : ''}
+      <div class="ico"><img src="${glyphData(it.icon || 'fish')}" style="width:34px;height:34px"></div>
+      <div class="nm">${esc(it.name)}</div>
+      <div class="ds">${esc(it.species)} · 饥饿+${it.hunger} 心情+${it.mood}</div>
+      <div class="row-between"><span class="num" style="font-weight:700;color:color-mix(in oklch,var(--p-fur-cat) 65%,black)">${it.price} 币</span>
+        <button class="btn btn-primary btn-sm" data-act="buy" data-id="${it.id}" ${it.lv > 1 ? 'disabled' : ''}>购买</button></div>
+    </div>`).join('');
+}
+async function renderBag() {
+  const el = $('#page');
+  el.innerHTML = `<div class="page-head"><h2>背包</h2><p class="sub">点击食物喂给宠物</p></div><div class="grid g4" id="invGrid"></div>`;
+  const inv = await api('GET', '/api/shop/inventory');
+  $('#invGrid').innerHTML = inv.map(it => `
+    <div class="shop-card">
+      <div class="ico"><img src="${glyphData(it.icon || 'fish')}" style="width:34px;height:34px"></div>
+      <div class="nm">${esc(it.name)}<span class="badge" style="margin-left:6px">×${it.count}</span></div>
+      <button class="btn btn-soft btn-sm" data-act="feed" data-id="${it.id}">喂食 +${it.hunger}</button>
+    </div>`).join('') || '<div class="empty">背包空空，去商店买点食物吧</div>';
+}
+
+/* ═══════════════ 页面：配种市场 ═══════════════ */
+async function renderBreeding() {
+  const el = $('#page');
+  el.innerHTML = `
+    <div class="page-head"><h2>配种市场</h2><p class="sub">雄宠成熟 3 天可上架 · 申请后对方在收件箱确认</p></div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="row-between"><div><b>我的宠物状态</b><div style="font-size:12px;color:var(--muted)" id="breedCheck"></div></div>
+        <div class="row"><button class="btn btn-primary btn-sm star" data-act="list">上架</button><button class="btn btn-ghost btn-sm" data-act="unlist">下架</button></div></div>
+    </div>
+    <div class="row" style="margin-bottom:12px">
+      <select class="input" id="mkSpecies" style="max-width:140px"><option value="">全部种类</option>${Object.keys(SPECIES).map(c => `<option>${SPECIES[c].n}</option>`).join('')}</select>
+      <select class="input" id="mkSort" style="max-width:140px"><option>最新</option><option>等级</option><option>稀有度</option></select>
+    </div>
+    <div class="grid g4" id="mkGrid"></div>
+    <div class="card" style="margin-top:14px"><h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:8px">我的配种记录</h3><div id="breedRec"></div></div>`;
+  loadMarket(); loadBreedRec();
+  const pet = await api('GET', '/api/pet/my').catch(() => null);
+  if (pet) {
+    const ok = [pet.sex === 'MALE', (pet.age || 0) >= 3, pet.rare !== undefined];
+    $('#breedCheck').innerHTML = ['已满 3 天（成熟）', '雄宠', '非病危状态'].map((t, i) =>
+      `<span class="badge ${ok[i] ? 'b-green' : 'b-red'}" style="margin-right:6px">${ok[i] ? '✓' : '✗'} ${t}</span>`).join('');
+  } else $('#breedCheck').textContent = '先在我的宠物页抽一只蛋吧';
+}
+function loadMarket() {
+  api('GET', '/api/breeding/market').then(mk => {
+    const f = $('#mkSpecies').value, s = $('#mkSort').value;
+    let list = mk.filter(m => !f || petCodeName(m.code) === f);
+    if (s === '等级') list = list.slice().sort((a, b) => b.lv - a.lv);
+    if (s === '稀有度') { const rank = { 传说: 4, 史诗: 3, 稀有: 2, 普通: 1 }; list = list.slice().sort((a, b) => (rank[b.rare] || 0) - (rank[a.rare] || 0)); }
+    const rareCls = { 传说: 'b-gold', 史诗: 'b-pink', 稀有: 'b-green', 普通: '' };
+    $('#mkGrid').innerHTML = list.map(m => `
+      <div class="shop-card">
+        <div class="ico" style="background:var(--fg-soft)">${petImg(m.code, m.sex, 'pet-svg', 52)}</div>
+        <div class="nm">${esc(m.name)}<span class="badge ${rareCls[m.rare] || ''}" style="margin-left:4px">${esc(m.rare)}</span></div>
+        <div style="font-size:12px;color:var(--muted)">主人：${esc(m.owner)}<br>${m.sex === 'MALE' ? '雄' : '雌'} · ${m.lv} 级 · ${esc(m.personality)}</div>
+        <div class="row" style="gap:6px">
+          <button class="btn btn-primary btn-sm" data-act="breed-req" data-id="${m.id}">💌 申请</button>
+          <button class="btn btn-ghost btn-sm" data-act="friend-req" data-id="${m.id}">➕ 好友</button>
+        </div>
+        <button class="btn btn-soft btn-sm btn-block" data-act="chat-user" data-id="${m.id}">💬 私聊</button>
+      </div>`).join('') || '<div class="empty">暂无上架宠物</div>';
+  });
+}
+function loadBreedRec() {
+  api('GET', '/api/breeding/my').then(rs => {
+    $('#breedRec').innerHTML = rs.map(r => `<div class="list-row"><div style="flex:1"><b>${esc(r.pet)}</b><div style="font-size:12px;color:var(--muted)">${r.date}</div></div><span class="badge b-orange">${esc(r.status)}</span></div>`).join('');
+  });
+}
+
+/* ═══════════════ 页面：托管所 / 好友 / 收件箱 ═══════════════ */
+async function renderHatch() {
+  const el = $('#page');
+  el.innerHTML = `<div class="page-head"><h2>托管所</h2><p class="sub">领取或赠送给好友，欠费会冻结</p></div><div class="grid g3" id="hatchGrid"></div>`;
+  const hs = await api('GET', '/api/hatchling/my');
+  $('#hatchGrid').innerHTML = hs.map(h => {
+    const rareCls = { 传说: 'b-gold', 史诗: 'b-pink', 稀有: 'b-green', 普通: '' };
+    return `<div class="pet-card-pix">
+      <div class="ico">${petImg(h.code, h.sex, 'pet-svg', 86)}</div>
+      <div class="nm">${petCodeName(h.code)}${h.sex === 'MALE' ? '♂' : '♀'}</div>
+      <div style="font-size:12px;color:var(--muted);margin:4px 0 8px"><span class="badge ${rareCls[h.rare] || ''}">${esc(h.rare)}</span> ${esc(h.personality)}</div>
+      <span class="badge ${h.status === '托管中' ? 'b-green' : 'b-red'}">${esc(h.status)}</span>
+      <div class="row" style="justify-content:center;margin-top:10px">
+        <button class="btn btn-primary btn-sm" data-act="claim" data-id="${h.id}">领取</button>
+        <button class="btn btn-ghost btn-sm" data-act="gift" data-id="${h.id}">赠送</button>
+      </div></div>`;
+  }).join('');
+}
+async function renderFriends() {
+  const el = $('#page');
+  el.innerHTML = `
+    <div class="page-head"><h2>好友</h2><p class="sub">搜索有防抖</p></div>
+    <div class="grid g2">
+      <div class="card"><h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:10px">添加好友</h3>
+        <div class="field"><input class="input" id="frSearch" placeholder="输入用户名或昵称搜索…"></div>
+        <div id="frResult" style="margin-top:8px"></div></div>
+      <div class="card"><h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:10px">好友列表</h3><div id="frList"></div></div>
+    </div>`;
+  loadFriends();
+}
+function loadFriends() {
+  api('GET', '/api/friends').then(fs => {
+    $('#frList').innerHTML = fs.map(f => `
+      <div class="list-row">
+        <span style="width:44px;flex:0 0 auto">${petImg(f.code, f.sex, 'avatar', 44)}</span>
+        <div style="flex:1;min-width:0"><b>${esc(f.nick)}</b> <span style="font-size:12px;color:var(--muted)">@${esc(f.username)}</span>
+          <div style="font-size:11.5px;color:var(--muted)">成为好友：${f.since}</div></div>
+        <input class="input" id="msg-${f.id}" placeholder="发消息…" style="max-width:150px">
+        <button class="btn btn-primary btn-sm" data-act="friend-msg" data-id="${f.id}">发送</button>
+        <button class="btn btn-danger btn-sm" data-act="del-friend" data-id="${f.id}">删</button>
+      </div>`).join('') || '<div class="empty">还没有好友，去搜索添加吧</div>';
+  });
+}
+let frTimer = null;
+function searchFriends() {
+  clearTimeout(frTimer);
+  frTimer = setTimeout(() => {
+    const kw = $('#frSearch').value.trim();
+    if (!kw) { $('#frResult').innerHTML = ''; return; }
+    api('GET', '/api/users/search?keyword=' + encodeURIComponent(kw)).then(rs => {
+      $('#frResult').innerHTML = rs.map(u => `
+        <div class="list-row" style="padding:8px 4px">
+          <div style="flex:1"><b>${esc(u.name)}</b> <span style="font-size:12px;color:var(--muted)">@${esc(u.username)}</span></div>
+          <button class="btn btn-soft btn-sm" data-act="send-friend-req" data-user="${esc(u.username)}">发送申请</button>
+        </div>`).join('') || '<div class="empty">未找到用户</div>';
+    });
+  }, 350);
+}
+async function renderInbox() {
+  const el = $('#page');
+  el.innerHTML = `
+    <div class="page-head"><h2>收件箱</h2><p class="sub">配种申请 / 赠送 / 好友申请 / 聊天 / 工资单</p></div>
+    <div class="grid g2">
+      <div class="card"><h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:10px">消息</h3><div id="inboxList"></div></div>
+      <div class="card"><h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:10px">私聊</h3>
+        <div class="row"><select class="input" id="chatSel" style="flex:1"><option value="">选择私聊对象…</option></select>
+          <button class="btn btn-ghost btn-sm" data-act="blacklist">🚫</button>
+          <button class="btn btn-danger btn-sm" data-act="report">🚩</button>
+          <button class="btn btn-ghost btn-sm" data-act="del-conv">🗑</button></div>
+        <div id="convBox" style="margin-top:10px"></div>
+      </div>
+    </div>`;
+  loadInbox();
+}
+function loadInbox() {
+  api('GET', '/api/inbox').then(ms => {
+    $('#inboxList').innerHTML = ms.map(m => `
+      <div class="list-row" style="${m.unread ? 'background:var(--accent-soft);border-radius:10px;padding:10px' : ''}">
+        <div style="flex:1;min-width:0">
+          <div><span class="badge b-orange">${esc(m.type)}</span> ${m.unread ? '<span class="badge b-red">未读</span>' : ''} ${m.code ? petImg(m.code, m.sex, '', 24) : ''}</div>
+          <div style="font-size:13px;margin-top:4px">${esc(m.from)}：${esc(m.text)}</div>
+        </div>
+        <div class="ops">${m.state === 'pending'
+          ? `<button class="btn btn-primary btn-sm" data-act="inbox-accept" data-id="${m.id}">同意</button><button class="btn btn-danger btn-sm" data-act="inbox-reject" data-id="${m.id}">拒绝</button>`
+          : (m.unread ? `<button class="btn btn-ghost btn-sm" data-act="inbox-read" data-id="${m.id}">已读</button>` : `<span class="badge b-green">已处理</span>`)}</div>
+      </div>`).join('') || '<div class="empty">暂无消息</div>';
+  });
+  api('GET', '/api/friends').then(fs => {
+    $('#chatSel').innerHTML = '<option value="">选择私聊对象…</option>' + fs.map(f => `<option value="${f.id}">${esc(f.nick)} @${esc(f.username)}</option>`).join('');
+  }).catch(() => {});
+}
+
+/* ═══════════════ 页面：墓地 / 桌面整理 / 拍照相册 ═══════════════ */
+async function renderGrave() {
+  const el = $('#page');
+  el.innerHTML = `<div class="page-head"><h2>墓地</h2><p class="sub">纪念曾经陪伴过你的它 · 点击展开反思</p></div><div class="grid g3" id="graveGrid"></div>`;
+  const gs = await api('GET', '/api/gravestones');
+  $('#graveGrid').innerHTML = gs.map(g => `
+    <div class="pet-card-pix">
+      <div style="width:76px;margin:0 auto;opacity:.85">${petImg(g.code, g.sex, 'pet-svg', 76)}</div>
+      <div style="font-family:var(--font-display);font-size:16px;margin-top:4px">${esc(g.name)} 之墓</div>
+      <div style="font-size:12px;color:var(--muted)">${petCodeName(g.code)}${g.sex === 'MALE' ? ' · 雄' : ' · 雌'} · ${esc(g.personality)}</div>
+      <div class="row" style="justify-content:center;gap:6px;margin-top:8px"><span class="badge">存活 ${g.days} 天</span><span class="badge b-red">${g.died}</span><span class="badge ${g.reflected ? 'b-green' : 'b-red'}">${g.reflected ? '已反思' : '未反思'}</span></div>
+      <details style="margin-top:10px;font-size:13px;color:var(--muted)"><summary style="cursor:pointer;color:var(--accent)">展开反思内容</summary><p style="margin-top:6px">${esc(g.content)}</p></details>
+    </div>`).join('') || '<div class="empty">暂无纪念</div>';
+}
+async function renderDesktop() {
+  const el = $('#page');
+  el.innerHTML = `
+    <div class="page-head"><h2>桌面整理</h2><p class="sub">扫描 → 预览 → 执行（确认）→ 可撤销</p></div>
+    <div class="grid g2">
+      <div class="card"><h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:10px">整理桌面</h3>
+        <div class="row">
+          <button class="btn btn-primary star" data-act="scan">🔍 扫描桌面</button>
+          <button class="btn btn-danger" data-act="organize">✅ 执行整理</button>
+          <button class="btn btn-ghost" data-act="undo">↩️ 撤销</button>
+        </div>
+        <div id="scanPreview" style="margin-top:12px"></div></div>
+      <div class="card"><h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:10px">分区规则</h3>
+        <div class="row" style="margin-bottom:10px">
+          <input class="input" id="zoneName" placeholder="分区名" style="flex:1">
+          <input class="input" id="zoneExt" placeholder="扩展名" style="flex:1">
+          <button class="btn btn-soft btn-sm" data-act="add-zone">新增</button>
+        </div>
+        <div id="zoneList"></div></div>
+    </div>`;
+  loadZones();
+}
+function loadZones() {
+  api('GET', '/api/desktop/zones').then(zs => {
+    $('#zoneList').innerHTML = zs.map(z => `
+      <div class="list-row"><div style="flex:1"><b>${esc(z.name)}</b> <span style="font-size:12px;color:var(--muted)">${esc(z.exts)}</span></div>
+        <button class="btn btn-danger btn-sm" data-act="del-zone" data-id="${z.id}">删除</button></div>`).join('');
+  });
+}
+async function renderCamera() {
+  const el = $('#page');
+  el.innerHTML = `
+    <div class="page-head row-between"><div><h2>拍照相册</h2><p class="sub">左边你 · 右边宠物动作参考</p></div>
+      <div class="row"><button class="btn btn-primary btn-sm star" data-act="cam-toggle">开启摄像头</button><button class="btn btn-primary btn-sm" data-act="shoot">📸 拍照</button></div></div>
+    <div class="cam-wrap" style="position:relative;background:#2e241c;border:3px solid var(--p-line);border-radius:16px;overflow:hidden;aspect-ratio:16/9">
+      <video id="camVideo" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none"></video>
+      <div id="camPh" style="position:absolute;inset:0;display:none"></div>
+      <div style="position:absolute;top:8%;right:5%;width:38%;height:80%;border:2px dashed #fff;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.08);color:#fff;font-size:12px">
+        <span>动作参考</span><span style="display:block">${petImg(MOCK.pet ? MOCK.pet.code : 'CAT', MOCK.pet ? MOCK.pet.sex : 'MALE', 'pet-svg', 54)}</span>
+        <span style="font-size:11px">跟我一起做动作吧～</span>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:10px">相册</h3>
+      <div class="row" style="margin-bottom:10px"><input class="input" id="albSearch" placeholder="按宠物名搜索…" style="max-width:200px"></div>
+      <div id="albGrid"></div>
+    </div>`;
+  loadAlbums();
+}
+function loadAlbums() {
+  const kw = ($('#albSearch').value || '').trim();
+  api('GET', '/api/photo/albums?keyword=' + encodeURIComponent(kw)).then(als => {
+    $('#albGrid').innerHTML = als.map(a => `
+      <div class="card" style="margin-bottom:12px">
+        <div class="row" style="margin-bottom:8px"><span style="width:44px">${petImg(a.code || a.typeCode, a.sex || a.gender, 'avatar', 44)}</span><b>${esc(a.petName || a.name)}</b><span class="badge">${a.photos.length} 张</span></div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(88px,1fr))">
+          ${a.photos.map((ph, pi) => `<div style="position:relative"><img src="${typeof ph === 'string' ? ph : ph.path}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:2px solid var(--border)">
+            <button class="btn btn-danger btn-sm" style="position:absolute;top:4px;right:4px;padding:2px 8px" data-act="del-photo" data-id="${a.id}" data-pi="${pi}" data-pid="${typeof ph === 'string' ? pi : ph.id}">✕</button></div>`).join('') || '<p style="font-size:12.5px;color:var(--muted)">暂无照片，拍照试试</p>'}
+        </div>
+      </div>`).join('');
+  });
+}
+let camStream = null;
+function camToggle() {
+  const v = $('#camVideo');
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; v.style.display = 'none'; $('#camPh').style.display = 'none'; return; }
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ video: true }).then(s => {
+      camStream = s; v.srcObject = s; v.style.display = 'block';
+      toast('摄像头已开启', 'ok');
+    }).catch(() => {
+      $('#camPh').style.display = 'block';
+      $('#camPh').innerHTML = '<div style="width:100%;height:100%;display:grid;place-items:center;color:#fff;font-size:13px">无法访问摄像头（演示占位）</div>';
+      toast('无法访问摄像头', 'err');
+    });
+  } else toast('当前环境不支持摄像头', 'err');
+}
+
+/* ═══════════════ 页面：对话 ═══════════════ */
+async function renderChat() {
+  const el = $('#page');
+  el.innerHTML = `
+    <div class="page-head"><h2>对话</h2><p class="sub">左 = 宠物 · 右 = 你（薄荷绿气泡）</p></div>
+    <div class="chat-box" id="chatBox"></div>
+    <div class="row" style="margin-top:10px">
+      <input class="input" id="chatInput" placeholder="和它说点什么…" style="flex:1" onkeydown="if(event.key==='Enter')document.querySelector('[data-act=send-chat]').click()">
+      <button class="btn btn-ghost" data-act="voice" id="voiceBtn">🎤 录音(60s)</button>
+      <button class="btn btn-primary star" data-act="send-chat">发送</button>
+    </div>`;
+  loadChat();
+}
+function loadChat() {
+  api('GET', '/api/chat/history').then(ch => {
+    const pet = MOCK.pet || { code: 'CAT', sex: 'MALE' };
+    $('#chatBox').innerHTML = ch.map(d => `<div class="msg-date">${d.date}</div>` + d.items.map(m => m.who === 'pet'
+      ? `<div class="msg pet"><span style="width:32px;flex:0 0 auto">${petImg(pet.code, pet.sex, 'avatar', 32)}</span><div>${esc(m.text)}<span class="t">${m.time}</span></div></div>`
+      : `<div class="msg me">${esc(m.text)}<span class="t">${m.time}</span></div>`).join('')).join('');
+    $('#chatBox').scrollTop = $('#chatBox').scrollHeight;
+  });
+}
+function sendVoice() {
+  api('POST', '/api/chat/voice', {}).then(() => { toast('语音已发送（60 秒内）', 'ok'); loadChat(); }).catch(e => toast(e.message, 'err'));
+}
+let voiceOn = false, voiceT = 0, voiceTimer = null, fpMenuClose = null;
+function voiceToggle() {
+  voiceOn = !voiceOn;
+  const b = $('#voiceBtn');
+  if (voiceOn) {
+    voiceT = 60;
+    b.textContent = '🎙 录音中 60s';
+    b.classList.add('btn-danger'); b.classList.remove('btn-ghost');
+    voiceTimer = setInterval(() => {
+      voiceT--;
+      b.textContent = '🎙 录音中 ' + voiceT + 's';
+      if (voiceT <= 0) { voiceToggle(); sendVoice(); }
+    }, 1000);
+  } else {
+    clearInterval(voiceTimer);
+    b.textContent = '🎤 录音(60s)';
+    b.classList.remove('btn-danger'); b.classList.add('btn-ghost');
+  }
+}
+
+/* ═══════════════ 页面：设置 / 管理后台 ═══════════════ */
+async function renderSettings() {
+  const el = $('#page');
+  const s = await api('GET', '/api/settings');
+  el.innerHTML = `
+    <div class="page-head"><h2>设置</h2><p class="sub">配种授权 / 应用感知 / 大模型 API Key</p></div>
+    <div class="grid g2">
+      <div class="card stack">
+        <div class="row-between"><div><b>允许配种</b><div style="font-size:12px;color:var(--muted)">关闭后他人无法申请配种</div></div>
+          <button class="btn ${s.allowBreeding ? 'btn-primary' : 'btn-ghost'} btn-sm" data-act="toggle-breed">${s.allowBreeding ? '已开启' : '已关闭'}</button></div>
+        <div class="divider"></div>
+        <div class="row-between"><div><b>应用感知</b><div style="font-size:12px;color:var(--muted)">感知学习/娱乐状态，宠物适时提醒</div></div>
+          <button class="btn ${s.appMonitor ? 'btn-primary' : 'btn-ghost'} btn-sm" data-act="toggle-monitor">${s.appMonitor ? '已开启' : '已关闭'}</button></div>
+      </div>
+      <div class="card">
+        <h3 style="font-family:var(--font-display);font-size:16px;margin-bottom:10px">API Key（供宠物对话）</h3>
+        <div class="row">
+          <select class="input" id="keyProvider" style="flex:1">${MOCK.providers.map(p => `<option>${p.n}</option>`).join('')}</select>
+          <input class="input" id="keyVal" placeholder="粘贴 API Key" style="flex:1">
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin:8px 0">选服务商自动填地址与模型</div>
+        <button class="btn btn-primary btn-sm star" data-act="add-key">添加 Key</button>
+        <div id="keyList" style="margin-top:10px"></div>
+      </div>
+    </div>`;
+  loadKeys();
+}
+function loadKeys() {
+  api('GET', '/api/keys').then(ks => {
+    $('#keyList').innerHTML = ks.map(k => `
+      <div class="list-row"><div style="flex:1"><b>${esc(k.provider)}</b> <span style="font-size:12px;color:var(--muted)">${esc(k.address)} · ${esc(k.model)}</span></div>
+        <span class="badge">${esc(k.masked)}</span>
+        <button class="btn btn-danger btn-sm" data-act="del-key" data-id="${k.id}">删除</button></div>`).join('');
+  });
+}
+async function renderAdmin() {
+  const el = $('#page');
+  if (!user || user.role !== 'ADMIN') {
+    el.innerHTML = `
+      <div class="card" style="max-width:560px;margin:0 auto;text-align:center">
+        <div style="font-size:44px">🔐</div>
+        <h2 style="margin:8px 0">管理员控制面板</h2>
+        <p class="sub" style="margin-bottom:14px">此页面仅 <b>ADMIN</b> 账号可见。当前登录的是普通用户,请退出后改用管理员账号登录。</p>
+        <div class="row" style="justify-content:center"><button class="btn btn-primary star" data-act="logout">退出并用管理员登录</button></div>
+        <p class="muted" style="margin-top:12px">测试账号:admin1 / admin2(密码 12345678)</p>
+      </div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="page-head row-between"><div><h2>管理员控制面板</h2><p class="sub">仅 ADMIN 可见</p></div>
+      <div class="row"><button class="btn btn-ghost btn-sm" data-act="back-user">返回玩家端</button></div></div>
+    <div class="row" style="margin-bottom:14px">
+      ${[['stats','数据总览'],['ausers','用户管理'],['apets','宠物管理'],['ashop','商店管理'],['aplay','玩耍管理'],['areport','举报中心'],['atools','测试工具']].map(([k, n]) =>
+        `<button class="chip ${adminTab === k ? 'active' : ''}" data-admin-tab="${k}">${n}</button>`).join('')}
+    </div>
+    <div id="adminPanel"></div>`;
+  renderAdminPanel();
+}
+async function renderAdminPanel() {
+  const box = $('#adminPanel');
+  if (adminTab === 'stats') {
+    const st = await api('GET', '/api/admin/stats');
+    box.innerHTML = `<div class="grid g4">${[['用户总数', st.users], ['宠物总数', st.pets], ['今日专注(分钟)', st.todayFocus], ['流通币', st.coins]].map(([k, v]) => `<div class="stat"><span class="k">${k}</span><span class="v num">${v}</span></div>`).join('')}</div>`;
+  }
+  if (adminTab === 'ausers') {
+    const us = await api('GET', '/api/admin/users');
+    box.innerHTML = `<div class="card"><div class="row" style="margin-bottom:10px"><input class="input" id="auSearch" placeholder="搜索用户名…" style="max-width:200px"><span class="badge">分页演示：第 1 / 1 页</span></div>
+      <table class="table"><thead><tr><th>用户名</th><th>角色</th><th>状态</th><th>币</th><th>操作</th></tr></thead><tbody>
+      ${us.map(u => `<tr><td>${esc(u.name)}</td><td>${u.role === 'ADMIN' ? '<span class="badge b-gold">管理员</span>' : '<span class="badge">用户</span>'}</td><td>${u.status === '启用' ? '<span class="badge b-green">启用</span>' : '<span class="badge b-red">禁用</span>'}</td><td class="num">${u.coins}</td>
+        <td><div class="ops"><button class="btn btn-ghost btn-sm" data-act="au-toggle" data-id="${u.id}">${u.status === '启用' ? '禁用' : '启用'}</button>
+        <button class="btn btn-ghost btn-sm" data-act="au-reset" data-id="${u.id}">重置密码</button>
+        <button class="btn btn-danger btn-sm" data-act="au-del" data-id="${u.id}">删除</button></div></td></tr>`).join('')}
+      </tbody></table></div>`;
+  }
+  if (adminTab === 'apets') {
+    const ps = await api('GET', '/api/admin/pets');
+    box.innerHTML = `<div class="card"><table class="table"><thead><tr><th>主人</th><th>名字</th><th>种类</th><th>雄/雌</th><th>性格</th><th>等级</th><th>饥饿</th><th>心情</th><th>币</th><th>状态</th></tr></thead><tbody>
+      ${ps.map(p => `<tr><td>${esc(p.owner)}</td><td>${esc(p.name)}</td><td>${petCodeName(p.code)}</td><td>${p.sex === 'MALE' ? '雄' : '雌'}</td><td>${esc(p.personality)}</td><td class="num">${p.lv}</td><td class="num">${p.hunger}</td><td class="num">${p.mood}</td><td class="num">${p.coins}</td><td>${p.status === '病危' ? '<span class="badge b-red">病危</span>' : '<span class="badge b-green">正常</span>'}</td></tr>`).join('')}
+      </tbody></table></div>`;
+  }
+  if (adminTab === 'ashop') {
+    const items = await api('GET', '/api/shop/items');
+    box.innerHTML = `<div class="card" style="margin-bottom:12px"><b>新增物品</b>
+      <div class="grid g4" style="margin-top:8px">
+        <div class="field"><label>名称</label><input class="input" id="asiName" placeholder="草莓蛋糕"></div>
+        <div class="field"><label>类型</label><select class="input" id="asiType"><option>food</option><option>toy</option><option>furniture</option></select></div>
+        <div class="field"><label>物种</label><select class="input" id="asiSpec">${Object.keys(SPECIES).map(c => `<option>${SPECIES[c].n}</option>`).join('')}</select></div>
+        <div class="field"><label>价格</label><input class="input num" id="asiPrice" type="number" value="100"></div>
+        <div class="field"><label>饥饿+</label><input class="input num" id="asiHunger" type="number" value="10"></div>
+        <div class="field"><label>心情+</label><input class="input num" id="asiMood" type="number" value="5"></div>
+        <div class="field"><label>解锁等级</label><input class="input num" id="asiLv" type="number" value="1"></div>
+        <div class="field"><label>图标</label><input class="input" id="asiIcon" placeholder="fish"></div>
+      </div>
+      <div class="row" style="margin-top:10px"><input type="file" id="asiImg" accept="image/*" style="font-size:12.5px"><button class="btn btn-primary btn-sm star" data-act="asi-add">新增商品</button></div></div>
+    <div class="card"><table class="table"><thead><tr><th>名称</th><th>类型</th><th>价格</th><th>状态</th><th>操作</th></tr></thead><tbody>
+      ${items.map(it => `<tr><td>${esc(it.name)}</td><td>${esc(it.type)}</td><td><input class="input num" id="ap-${it.id}" value="${it.price}" style="width:80px"></td><td>${it.listed === false ? '<span class="badge b-red">已下架</span>' : '<span class="badge b-green">在售</span>'}</td>
+      <td><div class="ops"><button class="btn btn-ghost btn-sm" data-act="asi-save" data-id="${it.id}">保存价格</button><button class="btn btn-ghost btn-sm" data-act="asi-toggle" data-id="${it.id}">${it.listed === false ? '上架' : '下架'}</button></div></td></tr>`).join('')}
+      </tbody></table></div>`;
+  }
+  if (adminTab === 'aplay') {
+    const ms = await api('GET', '/api/admin/play-modes');
+    box.innerHTML = `<div class="card"><div class="row" style="margin-bottom:10px">
+      <input class="input" id="apmName" placeholder="模式名（如：晒太阳）" style="flex:1"><button class="btn btn-primary btn-sm star" data-act="apm-add">新增</button></div>
+      <div class="row" style="gap:8px;flex-wrap:wrap">${ms.map((m) => `<span class="chip" style="cursor:default">${esc(m.name)} <button class="btn btn-danger btn-sm" style="margin-left:6px" data-act="apm-del" data-id="${m.id}">✕</button></span>`).join('')}</div></div>`;
+  }
+  if (adminTab === 'areport') {
+    const rs = await api('GET', '/api/admin/reports');
+    box.innerHTML = `<div class="card"><table class="table"><thead><tr><th>举报人</th><th>被举报人</th><th>说明</th><th>相关聊天</th><th>状态</th><th>操作</th></tr></thead><tbody>
+      ${rs.map(r => `<tr><td>${esc(r.from)}</td><td>${esc(r.target)}</td><td>${esc(r.text)}</td><td style="max-width:150px">${esc(r.chat)}</td><td><span class="badge ${r.status === '待处理' ? 'b-red' : 'b-green'}">${esc(r.status)}</span></td>
+      <td><div class="ops"><button class="btn btn-danger btn-sm" data-act="rep-black" data-id="${r.id}">拉黑</button><button class="btn btn-ghost btn-sm" data-act="rep-reject" data-id="${r.id}">驳回</button></div></td></tr>`).join('')}
+      </tbody></table></div>`;
+  }
+  if (adminTab === 'atools') {
+    box.innerHTML = `<div class="card"><b>测试工具</b><div class="row" style="margin-top:12px">
+      <button class="btn btn-ghost btn-sm" data-act="push-companion">陪伴聊天泡</button>
+      <button class="btn btn-ghost btn-sm" data-act="push-naughty">卖萌</button>
+      <button class="btn btn-ghost btn-sm" data-act="push-mute">静音测试</button>
+      <button class="btn btn-ghost btn-sm" data-act="push-invite">主动邀请</button>
+      <button class="btn btn-ghost btn-sm" data-act="push-window">新开窗口</button></div>
+      <div class="row" style="margin-top:10px"><span style="font-size:13px">对话记忆条数</span>
+      <select class="input" id="memCount" style="width:100px"><option>1</option><option>5</option><option>10</option><option>20</option><option>50</option><option>100</option></select>
+      <button class="btn btn-primary btn-sm star" data-act="mem-save">保存</button></div></div>`;
+  }
+}
+
+/* ═══════════════ 悬浮宠物小球（情境化交互） ═══════════════ */
+function initFloatPet() {
+  const fp = $('#floatPet');
+  fp.style.display = 'block';
+  refreshFloatFace();
+  fpBubble('我在这～', false);
+  floatDrag(fp);
+}
+function refreshFloatFace() {
+  const pet = MOCK.pet || { code: 'CAT', sex: 'MALE' };
+  $('#fpFace').innerHTML = petImg(pet.code, pet.sex, 'pet-svg', 62);
+  api('GET', '/api/pet/my').then(p => {
+    if (p && p.hasPet) {
+      MOCK.pet = p; MOCK.hunger = p.hunger; MOCK.mood = p.mood; MOCK.coins = p.coins;
+      $('#fpFace').innerHTML = petImg(p.code, p.sex, 'pet-svg', 62);
+      refreshStatus();
+    }
+  }).catch(() => {});
+}
+let fpBubbleTimer = null;
+function fpBubble(text, sticky) {
+  const b = $('#fpBubble');
+  if (text === null) { b.style.display = 'block'; b.textContent = ''; return; }
+  b.textContent = text;
+  b.classList.add('show');
+  clearTimeout(fpBubbleTimer);
+  if (!sticky) fpBubbleTimer = setTimeout(() => b.classList.remove('show'), 2600);
+}
+function floatDrag(fp) {
+  let sx = 0, sy = 0, ox = 0, oy = 0, down = false, moved = false;
+  const face = $('#fpFace');
+  face.addEventListener('pointerdown', e => {
+    down = true; moved = false; sx = e.clientX; sy = e.clientY;
+    const r = fp.getBoundingClientRect(); ox = r.left; oy = r.top;
+    face.style.cursor = 'grabbing';
+  });
+  window.addEventListener('pointermove', e => {
+    if (!down) return;
+    if (Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) > 4) moved = true;
+    fp.style.left = (ox + e.clientX - sx) + 'px';
+    fp.style.top = (oy + e.clientY - sy) + 'px';
+    fp.style.right = 'auto'; fp.style.bottom = 'auto';
+  });
+  window.addEventListener('pointerup', () => { down = false; face.style.cursor = 'grab'; });
+  face.addEventListener('click', e => {
+    if (moved) return;   // 拖拽不算点击
+    fpReaction();
+  });
+  face.addEventListener('dblclick', e => { if (!moved) { enterScene('home'); toast('已打开主控窗口', 'info'); } });
+  face.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    const items = [['🍖 喂食', () => quickFeed()], ['🎮 玩耍', () => fpPlay()], ['🙈 隐藏', () => { $('#floatPet').style.display = 'none'; toast('小球已隐藏，可从设置唤起', 'info'); }]];
+    $('#fpMenu').innerHTML = items.map(([t, fn], i) => `<button data-fpi="${i}">${t}</button>`).join('');
+    $('#fpMenu').classList.add('show');
+    if (fpMenuClose) document.removeEventListener('click', fpMenuClose);
+    fpMenuClose = () => { $('#fpMenu').classList.remove('show'); document.removeEventListener('click', fpMenuClose); fpMenuClose = null; };
+    setTimeout(() => document.addEventListener('click', fpMenuClose), 0);
+  });
+  $('#fpMenu').addEventListener('click', e => {
+    const b = e.target.closest('[data-fpi]');
+    if (!b) return;
+    const i = +b.dataset.fpi;
+    $('#fpMenu').classList.remove('show');
+    [[() => quickFeed()], [() => fpPlay()], [() => $('#floatPet').style.display = 'none']][i][0]();
+  });
+}
+function fpReaction() {
+  const acts = ['bounce', 'spin', 'squish'];
+  const cls = acts[Math.floor(Math.random() * acts.length)];
+  $('#fpFace').classList.add(cls);
+  setTimeout(() => $('#fpFace').classList.remove(cls), 600);
+  const moods = ['呼噜呼噜～', '嘿嘿，你终于来啦！', '陪我玩嘛～', '今天也要加油哦！'];
+  fpBubble(moods[Math.floor(Math.random() * moods.length)], false);
+}
+function quickFeed() {
+  api('GET', '/api/shop/inventory').then(inv => {
+    if (!inv.length) { toast('背包没有食物，去商店买一点吧', 'info'); return; }
+    return api('POST', '/api/shop/feed', { id: inv[0].id });
+  }).then(d => {
+    if (!d) return;
+    const delta = Math.max(0, d.hunger - MOCK.hunger);
+    MOCK.hunger = d.hunger;
+    toast('喂食成功，饥饿 +' + delta, 'ok');
+    fpBubble('真香！谢谢你～', false);
+    refreshStatus();
+  }).catch(e => toast(e.message, 'err'));
+}
+function fpPlay() {
+  api('GET', '/api/pet/play-modes').then(modes => {
+    const m = modes[Math.floor(Math.random() * modes.length)];
+    return api('POST', '/api/pet/play', { mode: m });
+  }).then(d => {
+    MOCK.mood = d.mood; MOCK.hunger = d.hunger; MOCK.xp = d.xp;
+    fpBubble('玩' + '得真开心～', false);
+    refreshStatus();
+  }).catch(() => {});
+}
+function doPlay(mode) {
+  api('POST', '/api/pet/play', { mode }).then(d => {
+    MOCK.hunger = d.hunger; MOCK.mood = d.mood; MOCK.xp = d.xp;
+    toast('和' + mode + '互动，心情 +8', 'ok');
+    say(mode + '真开心～', 2000);
+    refreshStatus();
+    renderPet();
+  }).catch(() => {});
+}
+function refreshStatus() {
+  const st = petStatusIco();
+  const el = $('#statusIco');
+  const f = $('#fpStat');
+  if (st) {
+    el.src = glyphData(st.g, st.c);
+    el.style.display = 'block';
+    el.title = st.label;
+    f.src = glyphData(st.g, st.c);
+    f.style.display = 'block';
+  } else { el.style.display = 'none'; f.style.display = 'none'; }
+  const coin = $('#coinVal');
+  if (MOCK.pet) coin.textContent = MOCK.coins;
+}
+$('#fpClose').addEventListener('click', e => { e.stopPropagation(); $('#floatPet').style.display = 'none'; toast('小球已隐藏，可从设置唤起', 'info'); });
+
+/* ═══════════════ 全局动作分发 ═══════════════ */
+const pageEl = $('#page');
+pageEl.addEventListener('click', async e => {
+  const b = e.target.closest('[data-act]');
+  if (!b) return;
+  const act = b.dataset.act;
+  try {
+    if (act === 'login') { const d = await api('POST', '/api/auth/login', { username: $('#lgUser').value.trim(), password: $('#lgPass').value }); setSession(d.token, d.user); }
+    if (act === 'register') {
+      const p = $('#rgPass').value, p2 = $('#rgPass2').value;
+      if (p !== p2) throw new Error('两次密码不一致');
+      const d = await api('POST', '/api/auth/register', { username: $('#rgUser').value.trim(), nick: $('#rgNick').value.trim(), email: $('#rgMail').value.trim(), code: $('#rgCode').value.trim(), password: p, question: $('#rgQ').value, answer: $('#rgAns').value.trim() });
+      setSession(d.token, d.user);
+    }
+    if (act === 'send-code') { await api('POST', '/api/auth/register-code', { email: $('#rgMail').value.trim() }); toast('验证码已发送（演示模式任意 6 位）', 'ok'); }
+    if (act === 'forgot-q') { const d = await api('GET', '/api/auth/forgot/question?username=' + encodeURIComponent($('#fgUser').value.trim())); $('#fgQ').textContent = '密保问题：' + d.question; }
+    if (act === 'forgot') { await api('POST', '/api/auth/forgot', { username: $('#fgUser').value.trim(), answer: $('#fgAns').value.trim(), newPassword: $('#fgPass').value }); toast('密码已重置，请重新登录', 'ok'); renderAuth('login'); }
+    if (act === 'logout') { logout(); }
+
+    if (act === 'draw') {
+      const name = $('#petName').value.trim();
+      if (!name) throw new Error('先给它起个名字吧');
+      const codes = Object.keys(SPECIES), code = codes[Math.floor(Math.random() * codes.length)];
+      const sex = Math.random() < 0.5 ? 'MALE' : 'FEMALE';
+      await api('POST', '/api/pet/draw', { name, code, sex });
+      toast('恭喜！抽到了' + petCodeName(code) + (sex === 'MALE' ? '♂' : '♀') + ' ' + name, 'ok');
+      renderPet(); refreshStatus(); refreshFloatFace(); layoutScenePet();
+    }
+    if (act === 'draw-egg') toast('蛋壳裂开了一条缝…再点一次下面的按钮把它带回家', 'info');
+    if (act === 'play') doPlay(b.dataset.mode);
+    if (act === 'play-pop') playPopover();
+    if (act === 'list') { confirmBox('上架到配种市场', '上架后其他玩家可以申请配种，确定上架吗？', async () => { await api('POST', '/api/pet/listed', { listed: true }); toast('已上架', 'ok'); renderPet(); }); }
+    if (act === 'unlist') { await api('POST', '/api/pet/listed', { listed: false }); toast('已下架', 'ok'); renderPet(); }
+    if (act === 'pet-more') {
+      if (!isAdminPanel()) { toast('更多操作仅管理员可见', 'info'); return; }
+      confirmBox('管理员工具', `<div class="field"><label>种类</label><select class="input" id="swCode">${Object.keys(SPECIES).map(c => `<option value="${c}">${SPECIES[c].n}</option>`).join('')}</select>
+        <label>性别</label><select class="input" id="swSex"><option value="MALE">雄</option><option value="FEMALE">雌</option></select>
+        <label>性格</label><select class="input" id="swPerson"><option>温和</option><option>活泼</option><option>高冷</option><option>胆小</option></select></div>`, async () => {
+        await api('POST', '/api/admin/switch-pet', { code: $('#swCode').value, sex: $('#swSex').value, personality: $('#swPerson').value });
+        toast('管理员已切换宠物', 'ok'); renderPet(); refreshStatus(); refreshFloatFace(); layoutScenePet();
+      });
+    }
+    if (act === 'submit-ref') { await api('POST', '/api/reflection/submit', { a1: $('#refA1').value, a2: $('#refA2').value }); toast('已提交反思，愿它安息', 'ok'); renderPet(); }
+
+    if (act === 'save-schedule') {
+      const title = $('#scTitle').value.trim();
+      if (!title) throw new Error('请输入日程标题');
+      const tags = [...$$('.chip[data-tag].active')].map(c => c.textContent.trim());
+      const custom = $('#scTag').value.trim();
+      if (custom) tags.push(custom);
+      const id = +($('#schTitle').dataset.schId || 0) || null;
+      await api(id ? 'PUT' : 'POST', '/api/schedule', { id, title, time: $('#scTime').value, repeat: $('#scRepeat').value, priority: $('#scPri').value, tags });
+      toast('日程已保存', 'ok'); renderSchedule();
+    }
+    if (act === 'done-sch') { await api('POST', '/api/schedule/' + b.dataset.id + '/done', {}); toast('完成！', 'ok'); loadScheduleList(); }
+    if (act === 'edit-sch') { const s = (await api('GET', '/api/schedule')).find(x => x.id == b.dataset.id); if (s) { $('#scTitle').value = s.title; $('#scTime').value = s.time; $('#scRepeat').value = s.repeat; $('#scPri').value = s.priority; $('#schTitle').textContent = '编辑日程（#' + s.id + '）'; $('#schTitle').dataset.schId = s.id; } }
+    if (act === 'del-sch') { confirmBox('删除日程', '删除后不可恢复，确定删除吗？', async () => { await api('DELETE', '/api/schedule/' + b.dataset.id, {}); toast('已删除', 'ok'); loadScheduleList(); }); }
+    if (act === 'sch-stats') { $('#schStats').style.display = $('#schStats').style.display === 'none' ? 'block' : 'none'; }
+
+    if (act === 'pm-start') {
+      let min = +$('#pmLen').value;
+      if (isNaN(min) || min === 0) min = Math.max(1, Math.min(180, +$('#pmCustomMin').value || 30));
+      await api('POST', '/api/pomodoro/start', { minutes: min });
+      toast('专注开始，宠物已静音', 'ok');
+      renderPomodoro(); startPmTick(); refreshStatus();
+    }
+    if (act === 'pm-pause') { await api('POST', '/api/pomodoro/' + MOCK.pm.id + '/pause', {}); renderPmRunning(); }
+    if (act === 'pm-resume') { await api('POST', '/api/pomodoro/' + MOCK.pm.id + '/resume', {}); renderPmRunning(); }
+    if (act === 'pm-complete') { await api('POST', '/api/pomodoro/' + MOCK.pm.id + '/complete', {}); stopPmTick(); toast('完成一轮专注，游戏币已入账！', 'ok'); renderPomodoro(); refreshStatus(); }
+    if (act === 'pm-abandon') { await api('POST', '/api/pomodoro/' + MOCK.pm.id + '/abandon', {}); stopPmTick(); toast('已放弃本次专注', 'info'); renderPomodoro(); refreshStatus(); }
+
+    if (act === 'buy') { const d = await api('POST', '/api/shop/buy', { id: b.dataset.id }); MOCK.coins = d.coins; toast('购买成功！已放入背包', 'ok'); renderShop(); refreshStatus(); }
+    if (act === 'feed') { const d = await api('POST', '/api/shop/feed', { id: b.dataset.id }); toast('喂食成功，饥饿 +' + Math.max(0, d.hunger - MOCK.hunger) + '！', 'ok'); MOCK.hunger = d.hunger; if (curPage === 'bag') renderBag(); else renderPet(); refreshStatus(); }
+
+    if (act === 'breed-req') { await api('POST', '/api/breeding/request', { id: b.dataset.id }); toast('配种申请已发送，等待对方确认', 'ok'); }
+    if (act === 'friend-req') { await api('POST', '/api/friends/request', { id: b.dataset.id }); toast('好友申请已发送', 'ok'); }
+    if (act === 'chat-user') { const m = (await api('GET', '/api/breeding/market')).find(x => x.id == b.dataset.id); if (m) { toast('已跳转私聊：' + m.owner, 'info'); showPage('inbox'); } }
+    if (act === 'claim') { toast('领取幼崽 → POST /api/hatchling/claim（演示模式）', 'info'); }
+    if (act === 'gift') { toast('赠送幼崽 → 输入对方用户名 POST /api/hatchling/gift', 'info'); }
+
+    if (act === 'send-friend-req') { await api('POST', '/api/friends/request', { username: b.dataset.user }); toast('申请已发送给 ' + b.dataset.user, 'ok'); }
+    if (act === 'friend-msg') { const v = $('#msg-' + b.dataset.id).value.trim(); if (!v) throw new Error('先输入消息内容'); await api('POST', '/api/inbox/message', { to: b.dataset.id, text: v }); toast('消息已发送', 'ok'); $('#msg-' + b.dataset.id).value = ''; }
+    if (act === 'del-friend') { confirmBox('删除好友', '确定删除这位好友吗？', async () => { await api('DELETE', '/api/friends/' + b.dataset.id, {}); toast('已删除好友', 'ok'); loadFriends(); }); }
+
+    if (act === 'inbox-accept') { await api('POST', '/api/inbox/' + b.dataset.id + '/accept', {}); toast('已同意', 'ok'); loadInbox(); renderSubPills(); }
+    if (act === 'inbox-reject') { await api('POST', '/api/inbox/' + b.dataset.id + '/reject', {}); toast('已拒绝', 'ok'); loadInbox(); renderSubPills(); }
+    if (act === 'inbox-read') { await api('POST', '/api/inbox/' + b.dataset.id + '/read', {}); loadInbox(); renderSubPills(); }
+    if (act === 'blacklist') { await api('POST', '/api/blacklist/' + ($('#chatSel').value || 0), {}); toast('已拉黑该用户', 'ok'); }
+    if (act === 'report') { confirmBox('举报用户', '举报后管理员会介入审核，确定举报吗？', async () => { await api('POST', '/api/reports', { target: $('#chatSel').value, text: '私聊发送不当内容', chat: '…' }); toast('举报已提交', 'ok'); }); }
+    if (act === 'del-conv') { confirmBox('删除对话', '删除后聊天记录不可恢复，确定删除？', async () => { await api('DELETE', '/api/inbox/conversation?with=' + ($('#chatSel').value || 'x'), {}); toast('对话已删除', 'ok'); }); }
+
+    if (act === 'scan') {
+      let d = null;
+      if (window.petAPI && window.petAPI.scanDesktop) { const r = await window.petAPI.scanDesktop(); window.__scanPlan = r.plan || []; d = { files: (r.plan || []).map(p => p.fileName), total: (r.plan || []).length }; }
+      if (!d) { try { d = await api('POST', '/api/desktop/scan', {}); } catch (e) { d = null; } }
+      if (!d) throw new Error('桌面扫描需在桌面客户端使用');
+      $('#scanPreview').innerHTML = '<div class="card" style="border-style:dashed"><b>扫描结果</b><p style="font-size:12.5px;color:var(--muted);margin:6px 0">发现 ' + d.total + ' 个文件，预览如下</p>' + d.files.map(f => '<div style="font-size:12.5px;padding:3px 0;border-bottom:1px dashed var(--border)">' + esc(f) + '</div>').join('') + '</div>'; }
+    if (act === 'organize') { confirmBox('执行整理', '将按分区规则移动桌面文件，确定执行整理吗？', async () => { if (window.petAPI && window.petAPI.organizeDesktop && window.__scanPlan) { const r = await window.petAPI.organizeDesktop(window.__scanPlan); toast('整理完成，移动 ' + (r.moved || 0) + ' 个文件', 'ok'); } else { await api('POST', '/api/desktop/organize/record', {}); toast('整理完成！宠物很开心', 'ok'); } $('#scanPreview').innerHTML = ''; }); }
+    if (act === 'undo') { if (window.petAPI && window.petAPI.undoDesktop) { const r = await window.petAPI.undoDesktop(); toast('已撤销，移回 ' + (r.undone || 0) + ' 个文件', 'ok'); } else { await api('POST', '/api/desktop/organize/record', {}); toast('已撤销上次整理', 'ok'); } }
+    if (act === 'add-zone') { const n = $('#zoneName').value.trim(), ex = $('#zoneExt').value.trim(); if (!n || !ex) throw new Error('分区名和扩展名不能为空'); await api('POST', '/api/desktop/zones', { zoneName: n, extensions: ex }); toast('分区已新增', 'ok'); loadZones(); }
+    if (act === 'del-zone') { confirmBox('删除分区规则', '确定删除该分区规则吗？', async () => { await api('DELETE', '/api/desktop/zones/' + b.dataset.id, {}); toast('已删除', 'ok'); loadZones(); }); }
+
+    if (act === 'cam-toggle') { camToggle(); }
+    if (act === 'shoot') {
+      if (camStream) {
+        const v = $('#camVideo');
+        const cv = document.createElement('canvas');
+        cv.width = v.videoWidth || 640; cv.height = v.videoHeight || 480;
+        cv.getContext('2d').drawImage(v, 0, 0);
+        const ph = cv.toDataURL('image/png');
+        $('#camPh').style.display = 'block';
+        $('#camPh').innerHTML = '<img src="' + ph + '" style="width:100%;height:100%;object-fit:cover">';
+        try {
+          const blob = await (await fetch(ph)).blob();
+          const fd = new FormData(); fd.append('file', blob, 'photo.png');
+          const r = await fetch(API_BASE + '/api/photo/upload', { method: 'POST', headers: { ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: fd });
+          const j = await r.json(); if (j.code !== 200) throw new Error(j.msg || '上传失败');
+        } catch (e) { enterDemo(); await api('POST', '/api/photo/upload', { photo: ph }); }
+      } else { enterDemo(); await api('POST', '/api/photo/upload', {}); }
+      toast('照片已存入相册', 'ok'); loadAlbums();
+    }
+    if (act === 'del-photo') { await api('DELETE', '/api/photo/' + (b.dataset.pid || b.dataset.pi), {}); toast('照片已删除', 'ok'); loadAlbums(); }
+
+    if (act === 'send-chat') { const v = $('#chatInput').value.trim(); if (!v) throw new Error('先输入内容'); await api('POST', '/api/chat/message', { content: v }); $('#chatInput').value = ''; loadChat(); }
+    if (act === 'voice') { voiceToggle(); if (!voiceOn) sendVoice(); }
+
+    if (act === 'toggle-breed') { const s = await api('PUT', '/api/settings/allow-breeding', { allowBreeding: !MOCK.settings.allowBreeding }); MOCK.settings = s; toast(s.allowBreeding ? '已开启配种授权' : '已关闭配种授权', 'ok'); renderSettings(); }
+    if (act === 'toggle-monitor') {
+      const next = !MOCK.settings.appMonitor;
+      if (next) toast('应用感知说明：宠物将感知你的学习与娱乐状态，并适时提醒', 'info');
+      const s = await api('PUT', '/api/settings/app-monitor', { appMonitor: next }); MOCK.settings = s; toast(s.appMonitor ? '已开启' : '已关闭', 'ok'); renderSettings();
+    }
+    if (act === 'add-key') { const p = $('#keyProvider').value; const pr = MOCK.providers.find(x => x.n === p); await api('POST', '/api/keys', { provider: p, address: pr.addr, model: pr.m, key: $('#keyVal').value.trim() }); toast('Key 已添加（脱敏存储）', 'ok'); loadKeys(); }
+    if (act === 'del-key') { await api('DELETE', '/api/keys/' + b.dataset.id, {}); toast('已删除', 'ok'); loadKeys(); }
+
+    if (act === 'au-toggle') { const next = b.textContent.trim() === '禁用' ? 0 : 1; await api('PUT', '/api/admin/users/' + b.dataset.id + '/status', { status: next }); toast('已更新用户状态', 'ok'); renderAdminPanel(); }
+    if (act === 'au-reset') { const np = prompt('输入新密码(至少 8 位):'); if (!np) return; if (np.length < 8) throw new Error('密码至少 8 位'); await api('POST', '/api/admin/users/' + b.dataset.id + '/reset-password', { newPassword: np }); toast('密码已重置', 'ok'); }
+    if (act === 'au-del') { confirmBox('删除用户', '删除用户将同时处理其宠物，确定删除吗？', async () => { await api('DELETE', '/api/admin/users/' + b.dataset.id, {}); toast('已删除', 'ok'); renderAdminPanel(); }); }
+    if (act === 'asi-add') { const it = { name: $('#asiName').value.trim(), type: $('#asiType').value, species: $('#asiSpec').value, price: +$('#asiPrice').value, hunger: +$('#asiHunger').value, mood: +$('#asiMood').value, unlockLevel: +$('#asiLv').value, icon: $('#asiIcon').value.trim() || 'fish' }; if (!it.name) throw new Error('请输入商品名称'); if ($('#asiImg').files[0]) await api('POST', '/api/admin/upload', {}); await api('POST', '/api/admin/shop-items', it); toast('商品已新增', 'ok'); renderAdminPanel(); }
+    if (act === 'asi-save') { await api('PUT', '/api/admin/shop-items/' + b.dataset.id, { id: b.dataset.id, price: +$('#ap-' + b.dataset.id).value }); toast('价格已保存', 'ok'); }
+    if (act === 'asi-toggle') { const it = (await api('GET', '/api/shop/items')).find(x => x.id == b.dataset.id); await api('PUT', '/api/admin/shop-items/' + b.dataset.id, { id: b.dataset.id, listed: it.listed === false }); toast(it.listed === false ? '已上架' : '已下架', 'ok'); renderAdminPanel(); }
+    if (act === 'apm-add') { const n = $('#apmName').value.trim(); if (!n) throw new Error('请输入模式名'); await api('POST', '/api/admin/play-modes', { name: n, emoji: '', mood: 5, hunger: -3, xp: 6 }); toast('玩耍模式已新增', 'ok'); renderAdminPanel(); }
+    if (act === 'apm-del') { await api('DELETE', '/api/admin/play-modes/' + b.dataset.id, {}); toast('已删除', 'ok'); renderAdminPanel(); }
+    if (act === 'rep-black') { await api('POST', '/api/admin/reports/' + b.dataset.id + '/resolve', { action: 'blacklist' }); toast('已拉黑该账户', 'ok'); renderAdminPanel(); }
+    if (act === 'rep-reject') { await api('POST', '/api/admin/reports/' + b.dataset.id + '/resolve', { action: 'reject' }); toast('已驳回举报', 'ok'); renderAdminPanel(); }
+    if (act === 'push-companion') { await api('GET', '/api/push/companion'); fpBubble('陪我聊聊天嘛～', false); }
+    if (act === 'push-naughty') { await api('GET', '/api/push/naughty'); fpBubble('喵呜～（卖萌）', false); }
+    if (act === 'push-mute') { toast('学习期间宠物已静音（IPC 演示）', 'info'); }
+    if (act === 'push-invite') { toast('已触发主动学习邀请', 'info'); fpBubble('要不要一起学习？', false); }
+    if (act === 'push-window') { toast('已请求新开测试窗口（桌面端 IPC）', 'info'); }
+    if (act === 'mem-save') { await api('PUT', '/api/admin/settings/chat-memory', { count: +$('#memCount').value }); toast('对话记忆条数已保存：' + $('#memCount').value, 'ok'); }
+    if (act === 'back-user') { showPage('pet'); }
+  } catch (err) { toast(err.message || '操作失败', 'err'); }
+});
+
+/* 认证子页签 / 场景小球轨道 / 页签 / 管理子页签 / 输入 */
+$('#authView').addEventListener('click', e => {
+  const t = e.target.closest('[data-auth-tab]');
+  if (t) renderAuth(t.dataset.authTab);
+  const q = e.target.closest('[data-quick]');
+  if (q) { setSession('demo-' + q.dataset.quick, { username: q.dataset.quick, role: /^admin/.test(q.dataset.quick) ? 'ADMIN' : 'USER', nick: q.dataset.quick }); toast('已用 ' + q.dataset.quick + ' 快捷登录（演示）', 'ok'); }
+});
+$('#railSlots').addEventListener('click', e => {
+  const s = e.target.closest('[data-scene]');
+  if (s) { moveBallTo(SCENES.findIndex(x => x.id === s.dataset.scene)); }
+});
+pageEl.addEventListener('click', e => {
+  const t = e.target.closest('[data-page]');
+  if (t) showPage(t.dataset.page);
+  const a = e.target.closest('[data-admin-tab]');
+  if (a) { adminTab = a.dataset.adminTab; renderAdmin(); }
+  const c = e.target.closest('[data-tag]');
+  if (c) c.classList.toggle('active');
+});
+pageEl.addEventListener('input', e => {
+  if (e.target.id === 'frSearch') searchFriends();
+  if (e.target.id === 'albSearch') loadAlbums();
+  if (e.target.id === 'recFrom' || e.target.id === 'recTo' || e.target.id === 'recSort') loadRecords();
+  if (e.target.id === 'mkSpecies' || e.target.id === 'mkSort') loadMarket();
+  if (e.target.id === 'pmLen') { $('#pmCustom').style.display = e.target.value === 'custom' ? 'block' : 'none'; }
+});
+
+/* 拉小球换场景 */
+let ballDragging = false, ballStartX = 0, ballStartLeft = 0;
+function moveBallTo(idx) {
+  curScene = SCENES[idx].id;
+  const x = railSlotX(idx) - $('#railBall').offsetWidth / 2;
+  $('#railBall').style.left = x + 'px';
+  enterScene(curScene);
+  $('#railBall').classList.add('wiggle');
+  setTimeout(() => $('#railBall').classList.remove('wiggle'), 320);
+}
+(function initRail() {
+  const rail = $('#rail'), ball = $('#railBall');
+  rail.addEventListener('pointerdown', e => {
+    if (e.target.closest('.rail-slot')) return;
+    ballDragging = true;
+    ballStartX = e.clientX;
+    ballStartLeft = ball.offsetLeft;
+    rail.setPointerCapture && rail.setPointerCapture(e.pointerId);
+  });
+  rail.addEventListener('pointermove', e => {
+    if (!ballDragging) return;
+    const railW = rail.clientWidth, ballW = ball.offsetWidth;
+    const min = 2, max = railW - ballW - 2;
+    const nLeft = Math.max(min, Math.min(max, ballStartLeft + (e.clientX - ballStartX)));
+    ball.style.left = nLeft + 'px';
+    // 高亮最近槽
+    const idx = Math.round(nLeft / (railW / SCENES.length));
+    $$('#railSlots .rail-slot').forEach((el, i) => el.classList.toggle('on', i === idx));
+  });
+  const end = () => {
+    if (!ballDragging) return;
+    ballDragging = false;
+    const railW = rail.clientWidth, ballW = ball.offsetWidth;
+    const nLeft = ball.offsetLeft;
+    const idx = Math.max(0, Math.min(SCENES.length - 1, Math.round(nLeft / (railW / SCENES.length))));
+    moveBallTo(idx);
+  };
+  rail.addEventListener('pointerup', end);
+  rail.addEventListener('pointercancel', end);
+})();
+
+/* 主循环：场景宠物动画 + 状态 */
+function mainLoop(t) {
+  petPhase += 1;
+  if (petPhase % 120 === 0) petBlinkT = 200;   // 每 2 秒眨眼
+  if (petBlinkT > 0) petBlinkT -= 16.7;
+  if (MOCK.pet && $('#appView').classList.contains('active')) {
+    drawScenePet(t);
+    const st = petStatusIco();
+    const el = $('#statusIco');
+    if (st && el.src !== glyphData(st.g, st.c)) { el.src = glyphData(st.g, st.c); el.style.display = 'block'; }
+  }
+  requestAnimationFrame(mainLoop);
+}
+setInterval(() => {
+  if (!MOCK.pet) return;
+  // 状态驱动：饿/无聊 → 主动表达
+  if (MOCK.hunger <= 30 && Math.random() < 0.4) { fpBubble('我饿了… 想吃 ' + (['小鱼干','胡萝卜','鲜肉包'][Math.floor(Math.random() * 3)]), false); }
+  else if (MOCK.mood <= 35 && Math.random() < 0.3) { fpBubble('陪我玩嘛～', false); }
+}, 20000);
+
+function buildTopbar() {
+  $('#userChip').innerHTML = `<span>${esc(user.username)}</span><span class="role">${user.role === 'ADMIN' ? '管理员' : '用户'}</span>`;
+  refreshStatus();
+}
+function isAdminPanel() { return user && user.role === 'ADMIN'; }
+
+/* ═══════════════ 初始化 ═══════════════ */
+function init() {
+  renderAuth('login');
+  drawScene('auth');
+  if (token && user) {
+    $('#authView').style.display = 'none';
+    $('#appView').style.display = 'flex';
+    $('#appView').classList.add('active');
+    buildTopbar();
+    buildRail();
+    enterScene('home');
+    initFloatPet();
+  } else {
+    drawScene('auth');
+  }
+  requestAnimationFrame(mainLoop);
+  window.addEventListener('resize', () => {
+    if ($('#appView').classList.contains('active')) { drawScene(SCENES.find(s => s.id === curScene).scene); positionBall(); }
+    else drawScene('auth');
+  });
+}
+init();
+</script>
+</body>
+</html>

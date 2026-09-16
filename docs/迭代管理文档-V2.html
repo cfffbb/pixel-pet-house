@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pet项目 · 迭代管理文档 V2.0</title>
+<style>
+  :root {
+    --bg: #fdf3df; --surface: #fffaf0; --fg: #4a3f35; --muted: #9a8a75;
+    --accent: #ff9f45; --accent-bg: #ffb26b; --border: #d9c6a9; --border-dark: #6b4f3a;
+    --p0: #d1453b; --p1: #ff9f45; --p2: #2e8b57;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:24px; background:var(--bg); color:var(--fg);
+    font-family:"Microsoft YaHei","PingFang SC",sans-serif; line-height:1.6; }
+  h1,h2,h3 { font-family:"ZCOOL KuaiLe","Microsoft YaHei",sans-serif; }
+  h1 { font-size:28px; border-bottom:3px solid var(--accent); padding-bottom:8px; }
+  h2 { font-size:22px; margin-top:32px; border-left:5px solid var(--accent); padding-left:10px; }
+  h3 { font-size:18px; margin-top:20px; }
+  .card { background:var(--surface); border:2px solid var(--border); border-radius:12px;
+    padding:16px; margin:12px 0; box-shadow:3px 3px 0 var(--border); }
+  table { width:100%; border-collapse:collapse; font-size:13px; margin:10px 0; }
+  th,td { border:1.5px solid var(--border); padding:6px 8px; text-align:left; }
+  th { background:var(--accent-bg); color:var(--fg); font-weight:bold; }
+  tbody tr:nth-child(even) { background:#fff5e0; }
+  .tag { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:bold; color:#fff; }
+  .tag-p0 { background:var(--p0); } .tag-p1 { background:var(--p1); } .tag-p2 { background:var(--p2); }
+  .tag-iter { background:var(--border-dark); }
+  .status { font-size:11px; padding:2px 8px; border-radius:10px; }
+  .s-pending { background:#f0e0d0; color:#8a7a65; }
+  .s-progress { background:#fff0d0; color:#c8853a; }
+  .s-done { background:#d8f0e0; color:#2e8b57; }
+  .s-blocked { background:#f8d8d8; color:#d1453b; }
+  .meta { color:var(--muted); font-size:12px; }
+  .warn { background:#fff3cd; border-left:4px solid #ffc107; padding:8px 12px; margin:8px 0; border-radius:4px; }
+  .info { background:#d1ecf1; border-left:4px solid #17a2b8; padding:8px 12px; margin:8px 0; border-radius:4px; }
+  ul { padding-left:20px; } li { margin:4px 0; }
+  .iter-block { border:2px solid var(--border-dark); border-radius:14px; padding:16px; margin:16px 0; background:#fffdf8; }
+  .iter-block h3 { margin-top:0; }
+  .progress-bar { height:12px; background:var(--border); border-radius:6px; overflow:hidden; margin:4px 0; }
+  .progress-bar i { display:block; height:100%; background:var(--accent); }
+  .toc { background:#fffdf8; border:2px solid var(--border); border-radius:12px; padding:16px; margin:16px 0; }
+  .toc a { color:var(--accent); text-decoration:none; }
+  .toc a:hover { text-decoration:underline; }
+  .meeting { border-left:4px solid var(--accent); padding:12px 16px; background:#fffdf8; border-radius:0 12px 12px 0; margin:12px 0; }
+  .meeting .title { font-weight:bold; font-size:16px; }
+  .meeting .date { color:var(--muted); font-size:12px; }
+</style>
+</head>
+<body>
+
+<h1>Pet (AI桌面宠物) · 迭代管理文档 V2.0</h1>
+<p class="meta">
+  文档版本：V2.0 &nbsp;|&nbsp; 更新日期：2026-08-17 &nbsp;|&nbsp; 编制人：产品经理 &nbsp;|&nbsp;
+  基线版本：V1.0(Iter-01已完成) &nbsp;|&nbsp; 当前迭代：Iter-02启动
+</p>
+
+<div class="warn">
+  <strong>老板审批状态：</strong>待审批 &nbsp;|&nbsp;
+  本文档覆盖《需求改进.txt》全部45项需求，分6个迭代推进。请老板审阅需求清单及优先级后确认。
+</div>
+
+<div class="toc">
+  <strong>目录</strong>
+  <ol>
+    <li><a href="#r1">项目现状与问题总结</a></li>
+    <li><a href="#r2">本次迭代需求清单及优先级（第一步·待老板确认）</a></li>
+    <li><a href="#r3">迭代计划总览（Iter-02 ~ Iter-07）</a></li>
+    <li><a href="#r4">迭代规划会会议纪要</a></li>
+    <li><a href="#r5">需求追踪表</a></li>
+    <li><a href="#r6">风险登记册</a></li>
+  </ol>
+</div>
+
+<!-- ========== 1. 项目现状 ========== -->
+<h2 id="r1">一、项目现状与问题总结</h2>
+<div class="card">
+  <h3>1.1 已完成（Iter-01 V1.0基线）</h3>
+  <ul>
+    <li>13个功能模块全部可运行：宠物/日程/番茄钟/商店/市场/托管/好友/收件箱/桌面整理/墓地/拍照/聊天/设置/管理</li>
+    <li>后端22个Controller，RESTful接口规范统一(Result&lt;T&gt;)</li>
+    <li>Electron打包为NSIS安装包，桌面窗口+系统托盘</li>
+    <li>暖奶油底+橙色配色方案落地，像素皮肤CSS</li>
+    <li>31个单元测试100%通过，接口冒烟测试100%通过</li>
+  </ul>
+  <h3>1.2 当前存在的问题（来自截图+需求改进.txt）</h3>
+  <table>
+    <tr><th>问题分类</th><th>具体问题</th><th>严重度</th></tr>
+    <tr><td>番茄钟逻辑</td><td>暂停后无法完成/无法二次暂停/完成需手动点击/倒计时结束未自动完成</td><td><span class="tag tag-p0">P0致命</span></td></tr>
+    <tr><td>图片显示</td><td>所有上传图片(食物/照片)无法显示，broken image图标</td><td><span class="tag tag-p0">P0致命</span></td></tr>
+    <tr><td>宠物交互</td><td>点击房间内宠物不触发说话气泡</td><td><span class="tag tag-p0">P0严重</span></td></tr>
+    <tr><td>宠物形象</td><td>主界面/悬浮窗/房屋三处宠物形象不一致</td><td><span class="tag tag-p0">P0严重</span></td></tr>
+    <tr><td>房间比例</td><td>宠物与房间比例失调，宠物过大/过小</td><td><span class="tag tag-p1">P1高</span></td></tr>
+    <tr><td>首次启动</td><td>首次启动无法抽宠物</td><td><span class="tag tag-p0">P0严重</span></td></tr>
+    <tr><td>市场系统</td><td>自己上架的宠物在市场中不可见</td><td><span class="tag tag-p1">P1高</span></td></tr>
+    <tr><td>番茄钟UI</td><td>橙色圆形按钮颜色溢出，未涂满</td><td><span class="tag tag-p1">P1高</span></td></tr>
+    <tr><td>聊天界面</td><td>配比不合适需下拉才能输入，背景图未随主题</td><td><span class="tag tag-p1">P1高</span></td></tr>
+    <tr><td>日程管理</td><td>缺少四种优先级/勾选完成/完成列表/图表改造</td><td><span class="tag tag-p1">P1高</span></td></tr>
+    <tr><td>桌面整理</td><td>无法整理，拉取用户文件后泄露风险</td><td><span class="tag tag-p1">P1高</span></td></tr>
+    <tr><td>视觉风格</td><td>只有一种小屋风格，需三种(传统木屋/赛博木屋/魔法小屋)</td><td><span class="tag tag-p1">P1高</span></td></tr>
+    <tr><td>宠物形象</td><td>当前像素画布宠物需更换为样例参照图(26张)</td><td><span class="tag tag-p1">P1高</span></td></tr>
+    <tr><td>AI/语音</td><td>未集成langchain4j，无对话/语音功能</td><td><span class="tag tag-p1">P1高</span></td></tr>
+    <tr><td>社交模块</td><td>需重构为微信式聊天列表，好友收件箱融合</td><td><span class="tag tag-p2">P2中</span></td></tr>
+    <tr><td>音效系统</td><td>无任何按钮音效/番茄钟音效/消息提醒</td><td><span class="tag tag-p2">P2中</span></td></tr>
+    <tr><td>管理员</td><td>缺少总测试功能/API配置界面/音乐导入</td><td><span class="tag tag-p2">P2中</span></td></tr>
+  </table>
+</div>
+
+<!-- ========== 2. 需求清单 ========== -->
+<h2 id="r2">二、本次迭代需求清单及优先级（第一步 · 待老板确认）</h2>
+<p class="meta">以下按优先级排序，P0为必须立即修复的致命/严重问题，P1为本轮迭代核心功能，P2为后续迭代增强功能。</p>
+
+<h3>2.1 P0 - 核心BUG修复（Iter-02）</h3>
+<table>
+  <tr><th>序号</th><th>需求名称</th><th>优先级</th><th>当前状态</th><th>技术可行性评估</th><th>依赖风险</th><th>建议方案</th><th>负责人</th><th>迭代</th></tr>
+  <tr><td>1</td><td>番茄钟逻辑修复</td><td><span class="tag tag-p0">P0</span></td><td>待优化</td><td>低 - 前端状态机重构</td><td>无</td><td>重构为状态机:待开始→运行中↔暂停→自动完成;支持多次暂停;倒计时结束自动完成</td><td>前端+后端</td><td><span class="tag tag-iter">Iter-02</span></td></tr>
+  <tr><td>2</td><td>图片显示修复</td><td><span class="tag tag-p0">P0</span></td><td>待优化</td><td>中 - 后端文件存储路径+前端图片路径对齐</td><td>文件存储目录权限</td><td>后端统一存储到uploads目录,前端用/api/upload/xxx路径访问,Electron主进程注册协议</td><td>后端+前端</td><td><span class="tag tag-iter">Iter-02</span></td></tr>
+  <tr><td>3</td><td>宠物点击交互</td><td><span class="tag tag-p0">P0</span></td><td>待优化</td><td>低 - canvas点击事件+气泡显示</td><td>无</td><td>scenePet canvas绑定click事件,触发说话气泡,复用悬浮窗提示库</td><td>前端</td><td><span class="tag tag-iter">Iter-02</span></td></tr>
+  <tr><td>4</td><td>首次启动抽宠物保障</td><td><span class="tag tag-p0">P0</span></td><td>待优化</td><td>低 - 前端首次判断+后端抽宠接口</td><td>无</td><td>登录后检查petInfo为空则强制跳转抽宠流程,确保接口可用</td><td>前端+后端</td><td><span class="tag tag-iter">Iter-02</span></td></tr>
+  <tr><td>5</td><td>宠物形象一致性</td><td><span class="tag tag-p0">P0</span></td><td>待优化</td><td>中 - 统一宠物图片源</td><td>需配合宠物形象更换</td><td>所有显示宠物处(主界面/悬浮窗/房屋/列表)统一使用同一图片源,按species+sex匹配</td><td>前端</td><td><span class="tag tag-iter">Iter-02</span></td></tr>
+  <tr><td>6</td><td>房间比例调整</td><td><span class="tag tag-p0">P0</span></td><td>待优化</td><td>低 - canvas绘制参数调整</td><td>需配合三种风格</td><td>调整drawScene中宠物scale和位置,宠物占场景高度约45%,脚下对齐地毯</td><td>前端</td><td><span class="tag tag-iter">Iter-02</span></td></tr>
+  <tr><td>7</td><td>市场自己上架宠物可见</td><td><span class="tag tag-p1">P1</span></td><td>待优化</td><td>低 - 后端查询条件调整</td><td>无</td><td>市场列表查询去除owner过滤,或增加"我的上架"标签页</td><td>后端</td><td><span class="tag tag-iter">Iter-02</span></td></tr>
+  <tr><td>8</td><td>桌面整理修复+安全</td><td><span class="tag tag-p1">P1</span></td><td>待优化</td><td>中 - Electron文件操作权限+路径安全</td><td>Electron主进程权限</td><td>主进程提供safeMove API,限制操作目录,前端只读文件列表不泄露路径</td><td>后端(Electron)</td><td><span class="tag tag-iter">Iter-02</span></td></tr>
+</table>
+
+<h3>2.2 P1 - 视觉大改 + UI优化（Iter-03 ~ Iter-04）</h3>
+<table>
+  <tr><th>序号</th><th>需求名称</th><th>优先级</th><th>当前状态</th><th>技术可行性评估</th><th>依赖风险</th><th>建议方案</th><th>负责人</th><th>迭代</th></tr>
+  <tr><td>9</td><td>三种小屋主题风格系统</td><td><span class="tag tag-p1">P1</span></td><td>新增</td><td>高 - 三套背景图+CSS变量+封装隔离</td><td>素材已就绪(38个文件)</td><td>用小屋子背景参照目录的3套图(传统木屋/赛博木屋/魔法小屋),前端themeStore管理,CSS变量切换,严格封装不杂交</td><td>前端</td><td><span class="tag tag-iter">Iter-03</span></td></tr>
+  <tr><td>10</td><td>游戏内年季节时间+现实时间同步</td><td><span class="tag tag-p1">P1</span></td><td>新增</td><td>中 - 时间引擎+季节判断+背景切换</td><td>依赖三种风格</td><td>游戏内时间可调速度,根据当前季节(春夏秋冬)+时段(白天/晚上)自动切换对应背景图</td><td>前端</td><td><span class="tag tag-iter">Iter-03</span></td></tr>
+  <tr><td>11</td><td>开关灯+白天晚上切换</td><td><span class="tag tag-p1">P1</span></td><td>新增</td><td>低 - 按钮事件+背景图替换</td><td>依赖三种风格+灯按钮素材</td><td>宠物旁添加灯按钮(三种风格各有独立灯按钮图),点击切换白天/晚上背景,播放对应开关声音</td><td>前端</td><td><span class="tag tag-iter">Iter-03</span></td></tr>
+  <tr><td>12</td><td>更换宠物形象(26张样例图)</td><td><span class="tag tag-p1">P1</span></td><td>新增</td><td>中 - 图片替换+species映射</td><td>素材已就绪(26个文件)</td><td>用宠物样例参照目录的26张图按species+sex映射,替换当前canvas像素绘制为图片渲染</td><td>前端</td><td><span class="tag tag-iter">Iter-04</span></td></tr>
+  <tr><td>13</td><td>注册界面背景图更换</td><td><span class="tag tag-p1">P1</span></td><td>新增</td><td>低 - CSS背景图替换</td><td>素材已就绪(1张图)</td><td>用注册页面背景图目录的jpg替换当前canvas绘制的小屋背景</td><td>前端</td><td><span class="tag tag-iter">Iter-04</span></td></tr>
+  <tr><td>14</td><td>游戏图标更换</td><td><span class="tag tag-p1">P1</span></td><td>新增</td><td>低 - 图标文件替换</td><td>素材已就绪(1张图)</td><td>用游戏图标目录的jpg作为Electron窗口图标和启动图标</td><td>前端</td><td><span class="tag tag-iter">Iter-04</span></td></tr>
+  <tr><td>15</td><td>悬浮窗计时器+三种表盘</td><td><span class="tag tag-p1">P1</span></td><td>待优化</td><td>中 - 悬浮窗UI重构+三种表盘图</td><td>素材已就绪(3张表盘图)</td><td>计时器稳定显示不闪烁,数字用对比色,三种风格各有计时器表盘图</td><td>前端</td><td><span class="tag tag-iter">Iter-04</span></td></tr>
+  <tr><td>16</td><td>番茄钟UI按钮溢出修复</td><td><span class="tag tag-p1">P1</span></td><td>待优化</td><td>低 - CSS修复</td><td>无</td><td>圆形按钮border-radius:50% + overflow:hidden,确保颜色均匀填充</td><td>前端</td><td><span class="tag tag-iter">Iter-04</span></td></tr>
+  <tr><td>17</td><td>聊天界面配比+背景随主题</td><td><span class="tag tag-p1">P1</span></td><td>待优化</td><td>中 - 布局重构+主题适配</td><td>依赖三种风格</td><td>聊天框自适应高度无需下拉,背景图随主题切换(三种风格各有聊天背景图)</td><td>前端</td><td><span class="tag tag-iter">Iter-04</span></td></tr>
+  <tr><td>18</td><td>日程管理四优先级+图表改造</td><td><span class="tag tag-p1">P1</span></td><td>待优化</td><td>中 - 前端布局+后端字段</td><td>后端schedule表加priority字段</td><td>创建任务分P0/P1/P2/P3四级,四块区域展示,勾选完成+删除,七日完成柱状图+任务数线状图,番茄钟累计饼状图改柱状图</td><td>前端+后端</td><td><span class="tag tag-iter">Iter-04</span></td></tr>
+  <tr><td>19</td><td>宠物和计时器配比合理</td><td><span class="tag tag-p1">P1</span></td><td>待优化</td><td>低 - 布局调整</td><td>无</td><td>调整悬浮窗中宠物与计时器的尺寸比例,视觉协调</td><td>前端</td><td><span class="tag tag-iter">Iter-04</span></td></tr>
+</table>
+
+<h3>2.3 P1 - AI/语音集成（Iter-05）</h3>
+<table>
+  <tr><th>序号</th><th>需求名称</th><th>优先级</th><th>当前状态</th><th>技术可行性评估</th><th>依赖风险</th><th>建议方案</th><th>负责人</th><th>迭代</th></tr>
+  <tr><td>20</td><td>langchain4j集成+管理员API配置</td><td><span class="tag tag-p1">P1</span></td><td>新增</td><td>高 - Java后端集成AI框架</td><td>需添加Maven依赖,API Key安全存储</td><td>后端集成langchain4j,管理员界面配置文本/语音/图片识别三类API,统一应用所有用户</td><td>后端</td><td><span class="tag tag-iter">Iter-05</span></td></tr>
+  <tr><td>21</td><td>悬浮窗宠物对话+右键输入框</td><td><span class="tag tag-p1">P1</span></td><td>新增</td><td>中 - 前端右键菜单+WebSocket/SSE</td><td>依赖langchain4j</td><td>悬浮窗右键弹出输入框,输入后调用文本API,未开启语音则气泡回答,开启则语音+气泡同时</td><td>前端+后端</td><td><span class="tag tag-iter">Iter-05</span></td></tr>
+  <tr><td>22</td><td>语音API+音色选择</td><td><span class="tag tag-p1">P1</span></td><td>新增</td><td>高 - TTS集成+音色管理</td><td>依赖API配置</td><td>管理员在API配置下选音色,用户在设置中选音色,支持默认模式(加载管理员配置)或自行配置</td><td>后端+前端</td><td><span class="tag tag-iter">Iter-05</span></td></tr>
+  <tr><td>23</td><td>气泡提示库多样化</td><td><span class="tag tag-p1">P1</span></td><td>新增</td><td>中 - 提示词库+随机触发</td><td>无</td><td>按种类/行为/性格/性别/年龄组合生成提示库,设置中勾选是否调用语音API朗读,本地随机触发</td><td>前端+后端</td><td><span class="tag tag-iter">Iter-05</span></td></tr>
+  <tr><td>24</td><td>语音内容安全防护</td><td><span class="tag tag-p1">P1</span></td><td>新增</td><td>中 - 敏感词过滤</td><td>无</td><td>后端对AI输出内容做敏感词过滤后再返回前端</td><td>后端</td><td><span class="tag tag-iter">Iter-05</span></td></tr>
+  <tr><td>25</td><td>多模型对接+自定义API</td><td><span class="tag tag-p1">P1</span></td><td>新增</td><td>高 - 多provider适配</td><td>依赖langchain4j</td><td>支持多个模型接口,支持添加自定义API接口,保证接口可用性校验</td><td>后端</td><td><span class="tag tag-iter">Iter-05</span></td></tr>
+  <tr><td>26</td><td>首次启动悬浮窗+设置选项</td><td><span class="tag tag-p1">P1</span></td><td>待优化</td><td>中 - Electron窗口管理+设置</td><td>无</td><td>首次启动固定打开悬浮窗,主界面增加启动按键,设置增加关闭首次启动和手动启动选择</td><td>前端(Electron)</td><td><span class="tag tag-iter">Iter-05</span></td></tr>
+</table>
+
+<h3>2.4 P2 - 社交重构+音效+管理员（Iter-06）</h3>
+<table>
+  <tr><th>序号</th><th>需求名称</th><th>优先级</th><th>当前状态</th><th>技术可行性评估</th><th>依赖风险</th><th>建议方案</th><th>负责人</th><th>迭代</th></tr>
+  <tr><td>27</td><td>社交重构(微信式)</td><td><span class="tag tag-p2">P2</span></td><td>新增</td><td>高 - 前端重构+后端接口调整</td><td>好友+收件箱数据合并</td><td>微信式聊天列表,好友收件箱融合,顶部搜索(名字+ID),官方好友不可删,管理员群发通知</td><td>前端+后端</td><td><span class="tag tag-iter">Iter-06</span></td></tr>
+  <tr><td>28</td><td>聊天增加删除/拉黑/举报/免打扰</td><td><span class="tag tag-p2">P2</span></td><td>新增</td><td>中 - 后端接口+前端交互</td><td>依赖社交重构</td><td>聊天界面顶部增加操作按钮,免打扰不弹通知,消息提醒声音</td><td>前端+后端</td><td><span class="tag tag-iter">Iter-06</span></td></tr>
+  <tr><td>29</td><td>音效系统-按钮点击</td><td><span class="tag tag-p2">P2</span></td><td>新增</td><td>低 - 全局Audio播放</td><td>素材已就绪(7个文件)</td><td>所有按钮点击播放"除了规定外的声音.mp3",规定声音按目录匹配</td><td>前端</td><td><span class="tag tag-iter">Iter-06</span></td></tr>
+  <tr><td>30</td><td>音效系统-开关灯三种声音</td><td><span class="tag tag-p2">P2</span></td><td>新增</td><td>低 - 主题匹配播放</td><td>素材已就绪(3个mp3)</td><td>三种风格各有独立开关声音,切换时播放对应声音</td><td>前端</td><td><span class="tag tag-iter">Iter-06</span></td></tr>
+  <tr><td>31</td><td>播放器+音量调节拖动条</td><td><span class="tag tag-p2">P2</span></td><td>新增</td><td>中 - 音频播放器+音量控制</td><td>无</td><td>设置中增加背景音乐/宠物语音音量拖动条,前面有音量按钮播放按键声音,管理员可导入音乐</td><td>前端+后端</td><td><span class="tag tag-iter">Iter-06</span></td></tr>
+  <tr><td>32</td><td>番茄钟结束音效+宠物恭喜</td><td><span class="tag tag-p2">P2</span></td><td>新增</td><td>低 - 事件触发播放</td><td>素材已就绪</td><td>番茄钟结束播放音效,触发宠物恭喜提示(主界面+悬浮窗都显示)</td><td>前端</td><td><span class="tag tag-iter">Iter-06</span></td></tr>
+  <tr><td>33</td><td>好友消息提醒声音</td><td><span class="tag tag-p2">P2</span></td><td>新增</td><td>低 - WebSocket+Audio</td><td>素材已就绪</td><td>收到好友消息播放提醒声音,免打扰不播放,点击拍照键也有声音</td><td>前端+后端</td><td><span class="tag tag-iter">Iter-06</span></td></tr>
+  <tr><td>34</td><td>拖动音量条声音</td><td><span class="tag tag-p2">P2</span></td><td>新增</td><td>低 - 拖动事件播放</td><td>素材已就绪</td><td>拖动音量条时播放对应声音</td><td>前端</td><td><span class="tag tag-iter">Iter-06</span></td></tr>
+  <tr><td>35</td><td>管理员总测试功能</td><td><span class="tag tag-p2">P2</span></td><td>新增</td><td>中 - 测试用例集成</td><td>无</td><td>管理员界面增加总测试按钮,点进去出现所有功能单次测试,含结果报告</td><td>前端+后端</td><td><span class="tag tag-iter">Iter-06</span></td></tr>
+  <tr><td>36</td><td>食物图片上传修复</td><td><span class="tag tag-p2">P2</span></td><td>待优化</td><td>低 - 同图片显示修复</td><td>依赖#2图片显示修复</td><td>管理员上传食物图片后正常显示,用户也能看到,保存到对应位置</td><td>后端+前端</td><td><span class="tag tag-iter">Iter-06</span></td></tr>
+  <tr><td>37</td><td>管理员导入背景音乐</td><td><span class="tag tag-p2">P2</span></td><td>新增</td><td>低 - 文件上传+播放</td><td>无</td><td>管理员后台可添加导入音乐文件,用户在设置中播放</td><td>后端+前端</td><td><span class="tag tag-iter">Iter-06</span></td></tr>
+  <tr><td>38</td><td>管理员API配置界面</td><td><span class="tag tag-p1">P1</span></td><td>新增</td><td>高 - 可视化配置+安全存储</td><td>依赖langchain4j</td><td>管理员界面单独实现配置所有用户API统一应用,含文本/图片识别/语音输出,可视化管理各类接口</td><td>前端+后端</td><td><span class="tag tag-iter">Iter-05</span></td></tr>
+</table>
+
+<!-- ========== 3. 迭代计划 ========== -->
+<h2 id="r3">三、迭代计划总览（Iter-02 ~ Iter-06）</h2>
+
+<div class="iter-block">
+  <h3>Iter-02：核心BUG修复（P0）</h3>
+  <p><strong>目标：</strong>修复所有致命/严重BUG，保障核心功能可用</p>
+  <p><strong>需求项：</strong>#1番茄钟逻辑 #2图片显示 #3宠物点击 #4首次抽宠 #5形象一致 #6房间比例 #7市场可见 #8桌面整理</p>
+  <p><strong>预计工期：</strong>1-2天</p>
+  <div class="progress-bar"><i style="width:0%"></i></div>
+  <p class="meta">状态：<span class="status s-pending">待开始</span> &nbsp;|&nbsp; 负责人：前端+后端</p>
+</div>
+
+<div class="iter-block">
+  <h3>Iter-03：三种主题风格系统（P1）</h3>
+  <p><strong>目标：</strong>实现传统木屋/赛博木屋/魔法小屋三种风格，季节时间，开关灯</p>
+  <p><strong>需求项：</strong>#9三种风格 #10季节时间 #11开关灯</p>
+  <p><strong>预计工期：</strong>2-3天</p>
+  <div class="progress-bar"><i style="width:0%"></i></div>
+  <p class="meta">状态：<span class="status s-pending">待开始</span> &nbsp;|&nbsp; 负责人：前端</p>
+</div>
+
+<div class="iter-block">
+  <h3>Iter-04：形象更换+UI修复（P1）</h3>
+  <p><strong>目标：</strong>更换宠物形象，修复番茄钟UI/聊天/日程图表，注册背景/游戏图标</p>
+  <p><strong>需求项：</strong>#12宠物形象 #13注册背景 #14游戏图标 #15悬浮窗计时器 #16番茄钟UI #17聊天界面 #18日程管理 #19配比</p>
+  <p><strong>预计工期：</strong>2-3天</p>
+  <div class="progress-bar"><i style="width:0%"></i></div>
+  <p class="meta">状态：<span class="status s-pending">待开始</span> &nbsp;|&nbsp; 负责人：前端+后端</p>
+</div>
+
+<div class="iter-block">
+  <h3>Iter-05：AI/语音集成（P1）</h3>
+  <p><strong>目标：</strong>集成langchain4j，实现AI对话/语音/气泡提示库/管理员API配置</p>
+  <p><strong>需求项：</strong>#20langchain4j #21对话 #22语音 #23气泡库 #24安全 #25多模型 #26悬浮窗启动 #38管理员API</p>
+  <p><strong>预计工期：</strong>3-4天</p>
+  <div class="progress-bar"><i style="width:0%"></i></div>
+  <p class="meta">状态：<span class="status s-pending">待开始</span> &nbsp;|&nbsp; 负责人：后端+前端</p>
+</div>
+
+<div class="iter-block">
+  <h3>Iter-06：社交重构+音效+管理员（P2）</h3>
+  <p><strong>目标：</strong>微信式社交，全音效系统，播放器，管理员总测试</p>
+  <p><strong>需求项：</strong>#27社交重构 #28聊天操作 #29-34音效 #35总测试 #36食物图片 #37背景音乐</p>
+  <p><strong>预计工期：</strong>3-4天</p>
+  <div class="progress-bar"><i style="width:0%"></i></div>
+  <p class="meta">状态：<span class="status s-pending">待开始</span> &nbsp;|&nbsp; 负责人：前端+后端</p>
+</div>
+
+<!-- ========== 4. 会议纪要 ========== -->
+<h2 id="r4">四、迭代规划会会议纪要</h2>
+
+<div class="meeting">
+  <div class="title">Iter-02~06 迭代规划会</div>
+  <div class="date">时间：2026-08-17 14:40 | 主持：产品经理 | 参会：前端专家、后端专家、测试</div>
+  
+  <h3>议题</h3>
+  <ol>
+    <li>评审《需求改进.txt》全部45项需求</li>
+    <li>确定优先级和迭代分配</li>
+    <li>评估技术可行性和依赖风险</li>
+    <li>制定Iter-02~06执行计划</li>
+  </ol>
+  
+  <h3>讨论要点</h3>
+  <ul>
+    <li><strong>前端专家：</strong>三种风格系统是最大工作量，需要严格封装，CSS变量切换，不能杂交。26张宠物样例图需按species+sex映射。悬浮窗计时器需重构为稳定显示。</li>
+    <li><strong>后端专家：</strong>langchain4j集成需添加Maven依赖，API Key必须加密存储。图片显示问题根因是后端文件存储路径与前端访问路径不对齐，需统一。日程管理需加priority字段。</li>
+    <li><strong>测试：</strong>番茄钟逻辑是当前最严重BUG，暂停/继续/完成状态机完全错乱。图片显示问题影响多个模块。建议Iter-02完成后做回归测试。</li>
+    <li><strong>产品经理：</strong>按"先修BUG→再改视觉→后加功能"顺序推进。P0必须在Iter-02全部解决，P1分Iter-03/04/05完成，P2放Iter-06。素材资源已全部就绪。</li>
+  </ul>
+  
+  <h3>决策</h3>
+  <ol>
+    <li>Iter-02优先修复8个P0/P1级BUG，不做新功能</li>
+    <li>Iter-03实现三种风格系统，严格封装，素材从小屋子背景参照目录获取</li>
+    <li>Iter-04更换宠物形象+UI修复，宠物图从宠物样例参照目录获取</li>
+    <li>Iter-05集成langchain4j，实现AI对话/语音/气泡库</li>
+    <li>Iter-06社交重构+音效系统+管理员总测试</li>
+    <li>每个迭代结束做阶段评审，测试输出回归报告</li>
+    <li>素材资源先统一复制到前端public目录规范管理</li>
+  </ol>
+  
+  <h3>待办事项</h3>
+  <table>
+    <tr><th>序号</th><th>待办</th><th>责任人</th><th>状态</th></tr>
+    <tr><td>1</td><td>素材资源复制到public目录(声音/宠物/背景/图标)</td><td>前端</td><td><span class="status s-pending">待开始</span></td></tr>
+    <tr><td>2</td><td>Iter-02 核心BUG修复</td><td>前端+后端</td><td><span class="status s-pending">待开始</span></td></tr>
+    <tr><td>3</td><td>Iter-02完成后回归测试</td><td>测试</td><td><span class="status s-pending">待开始</span></td></tr>
+    <tr><td>4</td><td>Iter-03 三种风格系统</td><td>前端</td><td><span class="status s-pending">待开始</span></td></tr>
+    <tr><td>5</td><td>Iter-04 形象更换+UI修复</td><td>前端+后端</td><td><span class="status s-pending">待开始</span></td></tr>
+    <tr><td>6</td><td>Iter-05 AI/语音集成</td><td>后端+前端</td><td><span class="status s-pending">待开始</span></td></tr>
+    <tr><td>7</td><td>Iter-06 社交+音效+管理员</td><td>前端+后端</td><td><span class="status s-pending">待开始</span></td></tr>
+  </table>
+</div>
+
+<!-- ========== 5. 需求追踪表 ========== -->
+<h2 id="r5">五、需求追踪表</h2>
+<table>
+  <tr><th>序号</th><th>需求</th><th>优先级</th><th>迭代</th><th>状态</th><th>负责人</th><th>备注</th></tr>
+  <tr><td>1</td><td>番茄钟逻辑修复</td><td>P0</td><td>Iter-02</td><td><span class="status s-pending">待开始</span></td><td>前端+后端</td><td></td></tr>
+  <tr><td>2</td><td>图片显示修复</td><td>P0</td><td>Iter-02</td><td><span class="status s-pending">待开始</span></td><td>后端+前端</td><td></td></tr>
+  <tr><td>3</td><td>宠物点击交互</td><td>P0</td><td>Iter-02</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>4</td><td>首次启动抽宠物</td><td>P0</td><td>Iter-02</td><td><span class="status s-pending">待开始</span></td><td>前端+后端</td><td></td></tr>
+  <tr><td>5</td><td>宠物形象一致性</td><td>P0</td><td>Iter-02</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>6</td><td>房间比例调整</td><td>P0</td><td>Iter-02</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>7</td><td>市场自己上架可见</td><td>P1</td><td>Iter-02</td><td><span class="status s-pending">待开始</span></td><td>后端</td><td></td></tr>
+  <tr><td>8</td><td>桌面整理修复+安全</td><td>P1</td><td>Iter-02</td><td><span class="status s-pending">待开始</span></td><td>后端</td><td></td></tr>
+  <tr><td>9</td><td>三种小屋主题风格</td><td>P1</td><td>Iter-03</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>10</td><td>游戏内季节时间</td><td>P1</td><td>Iter-03</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>11</td><td>开关灯+白天晚上</td><td>P1</td><td>Iter-03</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>12</td><td>更换宠物形象</td><td>P1</td><td>Iter-04</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>13</td><td>注册界面背景图</td><td>P1</td><td>Iter-04</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>14</td><td>游戏图标</td><td>P1</td><td>Iter-04</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>15</td><td>悬浮窗计时器+表盘</td><td>P1</td><td>Iter-04</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>16</td><td>番茄钟UI按钮溢出</td><td>P1</td><td>Iter-04</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>17</td><td>聊天界面配比+背景</td><td>P1</td><td>Iter-04</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>18</td><td>日程管理四优先级+图表</td><td>P1</td><td>Iter-04</td><td><span class="status s-pending">待开始</span></td><td>前端+后端</td><td></td></tr>
+  <tr><td>19</td><td>宠物和计时器配比</td><td>P1</td><td>Iter-04</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>20</td><td>langchain4j集成</td><td>P1</td><td>Iter-05</td><td><span class="status s-pending">待开始</span></td><td>后端</td><td></td></tr>
+  <tr><td>21</td><td>悬浮窗宠物对话</td><td>P1</td><td>Iter-05</td><td><span class="status s-pending">待开始</span></td><td>前端+后端</td><td></td></tr>
+  <tr><td>22</td><td>语音API+音色选择</td><td>P1</td><td>Iter-05</td><td><span class="status s-pending">待开始</span></td><td>后端+前端</td><td></td></tr>
+  <tr><td>23</td><td>气泡提示库多样化</td><td>P1</td><td>Iter-05</td><td><span class="status s-pending">待开始</span></td><td>前端+后端</td><td></td></tr>
+  <tr><td>24</td><td>语音内容安全防护</td><td>P1</td><td>Iter-05</td><td><span class="status s-pending">待开始</span></td><td>后端</td><td></td></tr>
+  <tr><td>25</td><td>多模型+自定义API</td><td>P1</td><td>Iter-05</td><td><span class="status s-pending">待开始</span></td><td>后端</td><td></td></tr>
+  <tr><td>26</td><td>首次启动悬浮窗+设置</td><td>P1</td><td>Iter-05</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>27</td><td>社交重构(微信式)</td><td>P2</td><td>Iter-06</td><td><span class="status s-pending">待开始</span></td><td>前端+后端</td><td></td></tr>
+  <tr><td>28</td><td>聊天删除/拉黑/举报/免打扰</td><td>P2</td><td>Iter-06</td><td><span class="status s-pending">待开始</span></td><td>前端+后端</td><td></td></tr>
+  <tr><td>29</td><td>音效-按钮点击</td><td>P2</td><td>Iter-06</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>30</td><td>音效-开关灯三种</td><td>P2</td><td>Iter-06</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>31</td><td>播放器+音量拖动条</td><td>P2</td><td>Iter-06</td><td><span class="status s-pending">待开始</span></td><td>前端+后端</td><td></td></tr>
+  <tr><td>32</td><td>番茄钟结束音效+恭喜</td><td>P2</td><td>Iter-06</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>33</td><td>好友消息提醒声音</td><td>P2</td><td>Iter-06</td><td><span class="status s-pending">待开始</span></td><td>前端+后端</td><td></td></tr>
+  <tr><td>34</td><td>拖动音量条声音</td><td>P2</td><td>Iter-06</td><td><span class="status s-pending">待开始</span></td><td>前端</td><td></td></tr>
+  <tr><td>35</td><td>管理员总测试</td><td>P2</td><td>Iter-06</td><td><span class="status s-pending">待开始</span></td><td>前端+后端</td><td></td></tr>
+  <tr><td>36</td><td>食物图片上传修复</td><td>P2</td><td>Iter-06</td><td><span class="status s-pending">待开始</span></td><td>后端+前端</td><td></td></tr>
+  <tr><td>37</td><td>管理员导入背景音乐</td><td>P2</td><td>Iter-06</td><td><span class="status s-pending">待开始</span></td><td>后端+前端</td><td></td></tr>
+  <tr><td>38</td><td>管理员API配置界面</td><td>P1</td><td>Iter-05</td><td><span class="status s-pending">待开始</span></td><td>前端+后端</td><td></td></tr>
+</table>
+
+<!-- ========== 6. 风险登记册 ========== -->
+<h2 id="r6">六、风险登记册</h2>
+<table>
+  <tr><th>风险</th><th>概率</th><th>影响</th><th>应对措施</th></tr>
+  <tr><td>三种风格封装不严格导致杂交</td><td>中</td><td>高</td><td>每套风格独立CSS文件+独立背景图目录,themeStore强制互斥</td></tr>
+  <tr><td>langchain4j集成兼容性问题</td><td>中</td><td>高</td><td>先做技术验证(Spike),确认依赖兼容后再全面集成</td></tr>
+  <tr><td>图片显示修复涉及多模块</td><td>低</td><td>中</td><td>后端统一文件存储接口,前端统一访问路径,一次性修复</td></tr>
+  <tr><td>社交重构数据迁移风险</td><td>中</td><td>中</td><td>保留旧表结构,新增关联表,渐进式迁移,可回滚</td></tr>
+  <tr><td>音效系统性能影响</td><td>低</td><td>低</td><td>Audio对象预加载,限制并发播放数量</td></tr>
+</table>
+
+<div class="info">
+  <strong>回滚机制：</strong>每个迭代开始前git commit打tag(iter-XX-start),迭代完成打tag(iter-XX-done)。
+  如迭代失败,git reset到上一个done tag即可回滚。文档版本同步更新。
+</div>
+
+<p class="meta" style="margin-top:32px;text-align:center;">
+  — 文档结束 · 等待老板审批 —
+</p>
+
+</body>
+</html>

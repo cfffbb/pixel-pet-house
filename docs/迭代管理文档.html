@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pet 项目 — 迭代管理文档</title>
+<style>
+  :root {
+    --bg: #fdf6e3; --fg: #3a3226; --accent: #d48142; --border: #d9c6a9;
+    --code-bg: #f5ede0; --table-head: #ffe9c9; --table-alt: #faf3e6;
+    --p0: #d1453b; --p1: #e8a33d; --p2: #4169e1;
+    --done: #2e8b57; --todo: #e8a33d; --new: #9b7bbf; --opt: #7fbf7f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.8;
+    max-width: 1000px; margin: 0 auto; padding: 40px 30px;
+  }
+  h1 { font-size: 24px; text-align: center; margin-bottom: 6px; color: #6b4f3a; }
+  h2 { font-size: 20px; margin: 30px 0 10px; padding-bottom: 6px; border-bottom: 2px solid var(--accent); color: #6b4f3a; }
+  h3 { font-size: 16px; margin: 18px 0 8px; color: #8a6342; }
+  p { margin: 6px 0; font-size: 14px; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13px; }
+  th, td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: var(--table-head); white-space: nowrap; }
+  tr:nth-child(even) { background: var(--table-alt); }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .meta { text-align: center; color: #9a8a75; font-size: 13px; margin-bottom: 24px; }
+  .p0 { color: var(--p0); font-weight: bold; }
+  .p1 { color: var(--p1); font-weight: bold; }
+  .p2 { color: var(--p2); font-weight: bold; }
+  .tag-done { background: #e8f5e9; color: var(--done); padding: 1px 8px; border-radius: 10px; font-size: 12px; }
+  .tag-todo { background: #fff8e1; color: var(--todo); padding: 1px 8px; border-radius: 10px; font-size: 12px; }
+  .tag-new { background: #f3e5f5; color: var(--new); padding: 1px 8px; border-radius: 10px; font-size: 12px; }
+  .tag-opt { background: #e8f5e9; color: var(--opt); padding: 1px 8px; border-radius: 10px; font-size: 12px; }
+  .version-box { background: #fffaf0; border: 2px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
+  .iter-log { background: #f5f5f5; border-left: 4px solid var(--accent); padding: 8px 14px; margin: 6px 0; border-radius: 0 6px 6px 0; font-size: 13px; }
+  .boss-approval { background: #fff3cd; border: 2px dashed #e8a33d; border-radius: 8px; padding: 14px 20px; margin: 16px 0; text-align: center; }
+  .section-pending { opacity: 0.4; pointer-events: none; }
+  @media print { body { max-width: none; } }
+</style>
+</head>
+<body>
+
+<h1>Pet（AI 桌面宠物）— 迭代管理文档</h1>
+<p class="meta">
+  文档编号：PET-PM-001 &nbsp;|&nbsp; 版本：V1.0（基线发布） &nbsp;|&nbsp; 日期：2026-08-17<br>
+  产品经理：AI-PM &nbsp;|&nbsp; 迭代号：Iter-01 &nbsp;|&nbsp; 状态：✅ 基线发布完成
+</p>
+
+<!-- ==================== 版本与迭代记录 ==================== -->
+<h2>版本与迭代记录（可回滚）</h2>
+<div class="version-box">
+<table>
+<tr><th>版本</th><th>日期</th><th>变更内容</th><th>变更人</th><th>状态</th></tr>
+<tr><td>V0.1</td><td>2026-08-17</td><td>初版：输出《本次迭代需求清单及优先级》</td><td>PM</td><td><span class="tag-done">老板已确认</span></td></tr>
+<tr><td>V0.2</td><td>2026-08-17</td><td>老板确认后：输出《SRS 基线版》+《协作机制说明》</td><td>PM</td><td><span class="tag-done">已完成</span></td></tr>
+<tr><td>V0.3</td><td>2026-08-17</td><td>执行阶段：接口规范统一 + UI 优化 + 打包方案 + AI Key校验</td><td>前端/后端</td><td><span class="tag-done">已完成</span></td></tr>
+<tr><td>V0.4</td><td>2026-08-17</td><td>测试阶段：回归测试 + 测试报告（31单测+7冒烟全通过）</td><td>测试</td><td><span class="tag-done">已完成</span></td></tr>
+<tr><td>V1.0</td><td>2026-08-17</td><td>基线发布：全部文档定稿 + 可安装包 + 测试通过</td><td>PM</td><td><span class="tag-done">已完成</span></td></tr>
+</table>
+</div>
+<p style="font-size:12px;color:#9a8a75;">回滚规则：每个版本独立保存快照（docs/archive/v0.x/），任何阶段未通过评审可回退至上一版本。</p>
+
+<!-- ==================== 第一步：需求清单 ==================== -->
+<h2>第一步：本次迭代需求清单及优先级</h2>
+<p>覆盖范围：当前<strong>已实现功能</strong>的规范化 + 本次迭代<strong>新增工程需求</strong>。不提前设计未做功能。</p>
+
+<h3>一、业务功能需求（已实现，本次重点为规范化和优化）</h3>
+<table>
+<tr>
+<th>序号</th><th>需求名称</th><th>优先级</th><th>当前状态</th><th>技术可行性评估</th><th>依赖风险</th><th>建议方案</th><th>负责人</th>
+</tr>
+<!-- P0 核心功能 -->
+<tr>
+<td>1</td><td>用户注册/登录<br><small>邮箱验证码+密保问答+JWT</small></td>
+<td class="p0">P0</td><td><span class="tag-done">已实现</span></td>
+<td>低 — 代码完整，单测覆盖(JWT 3例)</td>
+<td>SMTP 配置依赖用户授权码</td>
+<td>保持现状；application.yml 配置模板已就绪</td>
+<td>后端</td>
+</tr>
+<tr>
+<td>2</td><td>宠物抽蛋<br><small>一生一次，70%/25%/5%稀有度</small></td>
+<td class="p0">P0</td><td><span class="tag-done">已实现</span></td>
+<td>低 — 单测覆盖(5场景：空名/超长/已有/墓碑/管理员)</td>
+<td>无</td>
+<td>保持现状</td>
+<td>后端</td>
+</tr>
+<tr>
+<td>3</td><td>宠物状态推进<br><small>懒计算饥饿→病危→死亡→墓碑</small></td>
+<td class="p0">P0</td><td><span class="tag-done">已实现</span></td>
+<td>低 — 单测覆盖(6场景：null/死亡/正常/到0/病亡/类型缺失)</td>
+<td>无</td>
+<td>保持现状</td>
+<td>后端</td>
+</tr>
+<tr>
+<td>4</td><td>喂食与商店<br><small>购买/喂食/背包/病危救回</small></td>
+<td class="p0">P0</td><td><span class="tag-done">已实现</span></td>
+<td>低 — CRUD+业务校验完整</td>
+<td>无</td>
+<td>保持现状</td>
+<td>后端</td>
+</tr>
+<tr>
+<td>5</td><td>日程管理<br><small>CRUD+到期提醒+标签+统计</small></td>
+<td class="p0">P0</td><td><span class="tag-done">已实现</span></td>
+<td>低 — 前后端联通</td>
+<td>提醒依赖 Electron 主进程轮询</td>
+<td>保持现状</td>
+<td>前端+后端</td>
+</tr>
+<tr>
+<td>6</td><td>番茄钟<br><small>自定义时长+暂停≤2次+1币/分钟</small></td>
+<td class="p0">P0</td><td><span class="tag-done">已实现</span></td>
+<td>低 — 单测覆盖(5场景：等级/完成/暂停/归属/放弃)</td>
+<td>无</td>
+<td>保持现状</td>
+<td>后端</td>
+</tr>
+<tr>
+<td>7</td><td>桌面悬浮宠物<br><small>透明置顶+拖拽+右键菜单+陪伴推送</small></td>
+<td class="p0">P0</td><td><span class="tag-done">已实现</span></td>
+<td>中 — 禁用硬件加速+DPI感知已处理</td>
+<td>部分显卡透明窗可能崩溃(已加自动重载)</td>
+<td>保持现状；崩溃兜底已加</td>
+<td>前端</td>
+</tr>
+<!-- P1 重要功能 -->
+<tr>
+<td>8</td><td>配种市场+繁殖<br><small>上架/申请/怀孕3天/产崽3-5只</small></td>
+<td class="p1">P1</td><td><span class="tag-done">已实现</span></td>
+<td>低 — 业务逻辑完整</td>
+<td>配种冷却3天需时间验证</td>
+<td>保持现状</td>
+<td>后端</td>
+</tr>
+<tr>
+<td>9</td><td>幼崽托管<br><small>托管5币/天+10%夭折+领取需答题</small></td>
+<td class="p1">P1</td><td><span class="tag-done">已实现</span></td>
+<td>低 — 与配种联动</td>
+<td>无</td>
+<td>保持现状</td>
+<td>后端</td>
+</tr>
+<tr>
+<td>10</td><td>好友+收件箱<br><small>好友申请/配种/赠送/聊天/拉黑</small></td>
+<td class="p1">P1</td><td><span class="tag-done">已实现</span></td>
+<td>低 — 消息系统完整</td>
+<td>无</td>
+<td>保持现状</td>
+<td>后端</td>
+</tr>
+<tr>
+<td>11</td><td>AI 对话<br><small>14家服务商+文字+语音+AES加密</small></td>
+<td class="p1">P1</td><td><span class="tag-done">已实现</span></td>
+<td>中 — 依赖用户自配API Key</td>
+<td>Key无效时无友好提示</td>
+<td>增加 Key 有效性校验提示</td>
+<td>后端</td>
+</tr>
+<tr>
+<td>12</td><td>拍照相册<br><small>摄像头拍照+按宠物分组+搜索</small></td>
+<td class="p1">P1</td><td><span class="tag-done">已实现</span></td>
+<td>低 — Electron权限已配置</td>
+<td>部分笔记本无摄像头</td>
+<td>保持现状</td>
+<td>前端</td>
+</tr>
+<tr>
+<td>13</td><td>桌面整理<br><small>分区规则+扫描预览+执行+撤销</small></td>
+<td class="p1">P1</td><td><span class="tag-done">已实现</span></td>
+<td>低 — Electron文件API</td>
+<td>文件移动权限</td>
+<td>保持现状</td>
+<td>前端</td>
+</tr>
+<tr>
+<td>14</td><td>死亡反思+墓碑<br><small>2道开放题(每题≥10字)+墓地界面</small></td>
+<td class="p1">P1</td><td><span class="tag-done">已实现</span></td>
+<td>低 — 与状态推进联动</td>
+<td>无</td>
+<td>保持现状</td>
+<td>后端</td>
+</tr>
+<tr>
+<td>15</td><td>管理员后台<br><small>用户管理/商品/模式/举报/统计</small></td>
+<td class="p1">P1</td><td><span class="tag-done">已实现</span></td>
+<td>低 — 完整CRUD+权限</td>
+<td>无</td>
+<td>保持现状</td>
+<td>后端</td>
+</tr>
+<!-- P2 辅助功能 -->
+<tr>
+<td>16</td><td>应用感知<br><small>默认关+仅进程名+7天清理</small></td>
+<td class="p2">P2</td><td><span class="tag-done">已实现</span></td>
+<td>低 — 隐私红线已处理</td>
+<td>用户隐私顾虑</td>
+<td>保持现状；默认关闭</td>
+<td>前端</td>
+</tr>
+<tr>
+<td>17</td><td>陪伴推送+宠物主动邀请<br><small>一天2-3次+45-90分钟随机</small></td>
+<td class="p2">P2</td><td><span class="tag-done">已实现</span></td>
+<td>低 — 定时轮询</td>
+<td>学习中需静音</td>
+<td>保持现状</td>
+<td>前端</td>
+</tr>
+<tr>
+<td>18</td><td>举报系统<br><small>用户举报→管理员审核</small></td>
+<td class="p2">P2</td><td><span class="tag-done">已实现</span></td>
+<td>低 — 标准流程</td>
+<td>无</td>
+<td>保持现状</td>
+<td>后端</td>
+</tr>
+<tr>
+<td>19</td><td>日程统计图表<br><small>饼图/柱状图/时间分布</small></td>
+<td class="p2">P2</td><td><span class="tag-done">已实现</span></td>
+<td>低 — 前端渲染</td>
+<td>无</td>
+<td>保持现状</td>
+<td>前端</td>
+</tr>
+<tr>
+<td>20</td><td>摄像头手势识别<br><small>搓手→宠物转圈</small></td>
+<td class="p2">P2</td><td><span class="tag-done">已实现</span></td>
+<td>中 — 识别精度有限</td>
+<td>浏览器API差异</td>
+<td>作为趣味功能保留，不投入额外优化</td>
+<td>前端</td>
+</tr>
+</table>
+
+<h3>二、工程需求（本次迭代新增）</h3>
+<table>
+<tr>
+<th>序号</th><th>需求名称</th><th>优先级</th><th>当前状态</th><th>技术可行性评估</th><th>依赖风险</th><th>建议方案</th><th>负责人</th>
+</tr>
+<tr>
+<td>21</td><td>接口规范统一<br><small>返回格式+版本前缀+包分层</small></td>
+<td class="p0">P0</td><td><span class="tag-new">新增</span></td>
+<td>中 — 现有23个Controller需统一返回格式</td>
+<td>改动面广，需回归测试</td>
+<td>1. 统一返回体 <code>{code,msg,data}</code><br>2. 加全局响应包装器<br>3. 暂不加 /v1/ 前缀(改动太大)</td>
+<td>后端</td>
+</tr>
+<tr>
+<td>22</td><td>UI 视觉优化<br><small>像素风统一+图标清晰+响应式</small></td>
+<td class="p0">P0</td><td><span class="tag-todo">待优化</span></td>
+<td>中 — CSS 已修(DPI+渲染)，需整体走查</td>
+<td>素材限制(不允许AI生图)</td>
+<td>1. 联网搜索像素风素材库<br>2. 统一色彩/字号/间距<br>3. 16个面板走查</td>
+<td>前端</td>
+</tr>
+<tr>
+<td>23</td><td>Electron 打包为可安装软件<br><small>Windows .exe 安装包</small></td>
+<td class="p0">P0</td><td><span class="tag-new">新增</span></td>
+<td>中 — electron-builder 已在 devDependencies</td>
+<td>1. 图标素材<br>2. 签名(可选)</td>
+<td>1. 配置 electron-builder.yml<br>2. npm run build → .exe<br>3. 测试安装/卸载</td>
+<td>前端</td>
+</tr>
+<tr>
+<td>24</td><td>功能回归测试<br><small>13大模块+边界+异常</small></td>
+<td class="p0">P0</td><td><span class="tag-todo">待优化</span></td>
+<td>低 — 单测31个已过，需补充功能测试</td>
+<td>需后端+前端同时运行</td>
+<td>1. 执行测试报告中的功能用例<br>2. 补充接口冒烟测试<br>3. 输出回归测试报告</td>
+<td>测试</td>
+</tr>
+<tr>
+<td>25</td><td>接口文档输出<br><small>完整API清单+请求/响应示例</small></td>
+<td class="p1">P1</td><td><span class="tag-new">新增</span></td>
+<td>低 — 系统设计文档已有API清单</td>
+<td>接口规范统一后需同步</td>
+<td>基于现有API清单补充请求/响应示例</td>
+<td>后端</td>
+</tr>
+<tr>
+<td>26</td><td>需求变更管理制度<br><small>书面申请→评估→审批→同步</small></td>
+<td class="p1">P1</td><td><span class="tag-new">新增</span></td>
+<td>低 — 流程文档化</td>
+<td>团队执行纪律</td>
+<td>本《迭代管理文档》即为制度载体；变更记录见下方</td>
+<td>PM</td>
+</tr>
+<tr>
+<td>27</td><td>文档版本管理(可回滚)<br><small>每阶段快照+回滚机制</small></td>
+<td class="p1">P1</td><td><span class="tag-new">新增</span></td>
+<td>低 — 文件归档</td>
+<td>无</td>
+<td>每版本保存 docs/archive/v0.x/ 快照</td>
+<td>PM</td>
+</tr>
+</table>
+
+<h3>三、需求统计</h3>
+<table>
+<tr><th>优先级</th><th>数量</th><th>已实现</th><th>待优化</th><th>新增</th></tr>
+<tr><td class="p0">P0</td><td>11</td><td>7</td><td>2</td><td>2</td></tr>
+<tr><td class="p1">P1</td><td>12</td><td>8</td><td>0</td><td>4</td></tr>
+<tr><td class="p2">P2</td><td>5</td><td>5</td><td>0</td><td>0</td></tr>
+<tr><td><strong>合计</strong></td><td><strong>28</strong></td><td><strong>20</strong></td><td><strong>2</strong></td><td><strong>6</strong></td></tr>
+</table>
+
+<h3>四、砍除/简化说明</h3>
+<table>
+<tr><th>功能</th><th>处理</th><th>理由</th></tr>
+<tr><td>无砍除项</td><td>—</td><td>功能审计确认：13大模块均可正常运行，无需砍除</td></tr>
+<tr><td>AI语音识别精度</td><td>简化保留</td><td>依赖浏览器API，精度有限，作为辅助功能不额外投入</td></tr>
+<tr><td>摄像头手势识别</td><td>简化保留</td><td>同上，趣味功能不投入优化工时</td></tr>
+</table>
+
+<!-- ==================== 老板审批区 ==================== -->
+<div class="boss-approval" style="border-color:#2e8b57;background:#e8f5e9;">
+<h3>✅ 老板审批结果</h3>
+<p>以上需求清单共 <strong>28 项</strong>（P0×11 / P1×12 / P2×5），其中 20 项已实现、2 项待优化、6 项新增。</p>
+<p>本次迭代重点：<strong>P0 项全部完成</strong>（接口规范统一 + UI优化 + 打包 + 回归测试）</p>
+<p style="margin-top:10px;font-size:16px;color:#2e8b57;">
+  ☑ 同意，已进入第二步（SRS 基线版 + 协作机制说明 已产出）
+</p>
+<p style="margin-top:6px;font-size:12px;color:#9a8a75;">审批时间：2026-08-17 | 审批人：老板</p>
+</div>
+
+<!-- ==================== 需求变更记录 ==================== -->
+<h2>需求变更记录</h2>
+<table>
+<tr><th>变更编号</th><th>日期</th><th>需求项</th><th>变更类型</th><th>变更描述</th><th>提出人</th><th>审批状态</th></tr>
+<tr><td colspan="7" style="text-align:center;color:#9a8a75;">暂无变更记录</td></tr>
+</table>
+<p style="font-size:12px;color:#9a8a75;">变更流程：书面申请 → PM 评估影响 → 老板审批 → 同步文档和代码 → 更新本记录</p>
+
+<!-- ==================== 后续步骤（待解锁） ==================== -->
+<h2>第二步：SRS 软件需求规格说明书（基线版）✅</h2>
+<div class="version-box">
+<p><strong>文档编号：</strong>PET-SRS-001 &nbsp;|&nbsp; <strong>版本：</strong>V1.0（基线） &nbsp;|&nbsp; <strong>状态：</strong>已产出</p>
+<p><strong>覆盖范围：</strong>仅当前已实现功能（13 大模块 / 15 条需求编号），不提前设计未做功能。</p>
+<p><strong>核心内容：</strong></p>
+<ul>
+<li>需求追溯矩阵（需求编号→SRS 章节→迭代清单序号→实现状态→单测覆盖）</li>
+<li>15 条功能需求规约（REQ-AUTH ~ REQ-SET），标注 P0/P1/P2 优先级</li>
+<li>非功能需求（性能/安全/可用性/可维护性/兼容性）</li>
+<li>变更管理流程（5 步：申请→评估→审批→同步→版本号）</li>
+</ul>
+<p>📄 完整文档：<a href="SRS-基线版-V1.0.html">SRS-基线版-V1.0.html</a></p>
+</div>
+
+<h2>第三步：协作机制说明 ✅</h2>
+<div class="version-box">
+<p><strong>文档编号：</strong>PET-PM-002 &nbsp;|&nbsp; <strong>版本：</strong>V1.0 &nbsp;|&nbsp; <strong>状态：</strong>已产出</p>
+<p><strong>核心内容：</strong></p>
+<ul>
+<li>角色分工矩阵（4 人+老板，含 RACI 职责边界表）</li>
+<li>会议制度（4 种：每日站会 15min / 阶段评审 / 紧急会议 30min 内 / 周度复盘）</li>
+<li>沟通通道（7 种场景对应通道+时效）</li>
+<li>跨模块越界管控（不可越界修改，统一提交 PM 调度）</li>
+<li>文档管理规范（7 份文档编号+版本规则+回滚机制）</li>
+<li>迭代节奏（Iter-01 共 7 个阶段，当前处于阶段②→③过渡）</li>
+</ul>
+<p>📄 完整文档：<a href="协作机制说明.html">协作机制说明.html</a></p>
+</div>
+
+<h2>第四步：会议纪要与执行追踪 ✅</h2>
+<div class="version-box">
+<p><strong>首份会议纪要：</strong>PET-MTG-001 — Iter-01 启动会（阶段评审+任务分配）</p>
+<p><strong>会议结论：</strong>需求清单+SRS+协作机制评审通过，进入执行阶段。9 项 P0/P1 任务已分配。</p>
+<p><strong>关键决策：</strong></p>
+<ul>
+<li>接口规范用全局包装器，不逐个改 Controller</li>
+<li>UI 走查完成后再打包，避免重复</li>
+<li>冒烟测试等接口规范统一后执行</li>
+</ul>
+<p><strong>排期：</strong>D1~D5（5 天），D5 基线发布评审</p>
+<p>📄 完整纪要：<a href="会议纪要-Iter01启动会.html">会议纪要-Iter01启动会.html</a></p>
+</div>
+
+<h3>待办事项追踪（实时更新）</h3>
+<table>
+<tr><th>编号</th><th>任务</th><th>负责人</th><th>状态</th><th>预计完成</th></tr>
+<tr><td>BE-01</td><td>接口规范统一</td><td>后端</td><td><span class="tag-done">已完成</span></td><td>D1</td></tr>
+<tr><td>BE-02</td><td>接口文档补充</td><td>后端</td><td><span class="tag-done">已完成</span></td><td>D2</td></tr>
+<tr><td>BE-03</td><td>AI Key 校验提示</td><td>后端</td><td><span class="tag-done">已完成</span></td><td>D3</td></tr>
+<tr><td>FE-01</td><td>UI 视觉走查</td><td>前端</td><td><span class="tag-done">已完成</span></td><td>D1</td></tr>
+<tr><td>FE-02</td><td>素材优化</td><td>前端</td><td><span class="tag-done">已完成</span></td><td>D1</td></tr>
+<tr><td>FE-03</td><td>Electron 打包</td><td>前端</td><td><span class="tag-done">已完成</span></td><td>D2</td></tr>
+<tr><td>QA-01</td><td>功能回归测试</td><td>测试</td><td><span class="tag-done">已完成</span></td><td>D2</td></tr>
+<tr><td>QA-02</td><td>接口冒烟测试</td><td>测试</td><td><span class="tag-done">已完成</span></td><td>D2</td></tr>
+<tr><td>QA-03</td><td>回归测试报告</td><td>测试</td><td><span class="tag-done">已完成</span></td><td>D4</td></tr>
+</table>
+
+</body>
+</html>

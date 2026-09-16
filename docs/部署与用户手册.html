@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 宠物助手 — 部署与用户手册</title>
+<style>
+  :root {
+    --bg: #fdf6e3; --fg: #3a3226; --accent: #d48142; --border: #d9c6a9;
+    --code-bg: #f5ede0; --table-head: #ffe9c9; --table-alt: #faf3e6;
+    --tip: #e8f4e8; --warn: #fff3cd; --danger: #fde8e8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.8;
+    max-width: 900px; margin: 0 auto; padding: 40px 30px;
+  }
+  h1 { font-size: 26px; text-align: center; margin-bottom: 8px; color: #6b4f3a; }
+  h2 { font-size: 20px; margin: 32px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--accent); color: #6b4f3a; }
+  h3 { font-size: 16px; margin: 20px 0 8px; color: #8a6342; }
+  p { margin: 6px 0; font-size: 14px; }
+  ul, ol { margin: 6px 0 6px 22px; font-size: 14px; }
+  li { margin: 4px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13px; }
+  th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+  th { background: var(--table-head); }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-size: 13px; }
+  pre { background: #2d2d2d; color: #f8f8f2; padding: 12px 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.5; margin: 8px 0; }
+  .meta { text-align: center; color: #9a8a75; font-size: 13px; margin-bottom: 30px; }
+  .tip { background: var(--tip); border-left: 4px solid #2e8b57; padding: 8px 14px; margin: 8px 0; border-radius: 0 6px 6px 0; }
+  .warn { background: var(--warn); border-left: 4px solid #e8a33d; padding: 8px 14px; margin: 8px 0; border-radius: 0 6px 6px 0; }
+  .danger { background: var(--danger); border-left: 4px solid #d1453b; padding: 8px 14px; margin: 8px 0; border-radius: 0 6px 6px 0; }
+  .step { background: #fffaf0; border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 10px 0; }
+  .step-num { display: inline-block; width: 28px; height: 28px; line-height: 28px; text-align: center; background: var(--accent); color: #fff; border-radius: 50%; font-weight: bold; margin-right: 8px; }
+  @media print { body { max-width: none; } }
+</style>
+</head>
+<body>
+
+<h1>AI 宠物助手 — 部署与用户手册</h1>
+<p class="meta">
+  文档版本：V1.0 &nbsp;|&nbsp; 编写日期：2026-08-17<br>
+  适用对象：开发者部署 + 普通用户日常使用
+</p>
+
+<!-- ==================== 1. 环境准备 ==================== -->
+<h2>1. 环境准备</h2>
+<p>就像做菜前要先备好锅碗瓢盆，运行这个项目也需要先装好三样东西。</p>
+
+<h3>1.1 必装软件清单</h3>
+<table>
+<tr><th>软件</th><th>版本要求</th><th>用途</th><th>下载地址</th></tr>
+<tr><td>JDK</td><td>21 或以上</td><td>运行后端 Java 程序</td><td>https://adoptium.net/</td></tr>
+<tr><td>MySQL</td><td>8.0 或以上</td><td>数据库，存所有数据</td><td>https://dev.mysql.com/downloads/</td></tr>
+<tr><td>Node.js</td><td>18 或以上</td><td>运行前端 Electron 应用</td><td>https://nodejs.org/</td></tr>
+<tr><td>IntelliJ IDEA</td><td>社区版即可</td><td>打开和运行后端代码</td><td>https://www.jetbrains.com/idea/</td></tr>
+</table>
+
+<div class="tip">
+<strong>提示：</strong>安装 JDK 后，需要设置环境变量 <code>JAVA_HOME</code> 指向 JDK 安装目录（例如 <code>D:\jdk\jdk21.0.10_7</code>），并把 <code>%JAVA_HOME%\bin</code> 加入 <code>PATH</code>。
+</div>
+
+<h3>1.2 验证安装</h3>
+<p>打开命令行（Win+R 输入 cmd），依次输入以下命令，能看到版本号就说明装好了：</p>
+<pre>java -version      <!-- 应显示 openjdk version "21.x.x" -->
+mysql --version    <!-- 应显示 mysql  Ver 8.x.x -->
+node -v            <!-- 应显示 v18.x.x 或更高 -->
+npm -v             <!-- 应显示 9.x.x 或更高 --></pre>
+
+<!-- ==================== 2. 数据库初始化 ==================== -->
+<h2>2. 数据库初始化</h2>
+<p>数据库就像宠物的"档案柜"，所有用户、宠物、日程数据都存在这里。</p>
+
+<div class="step">
+<span class="step-num">1</span><strong>登录 MySQL</strong>
+<pre>mysql -u root -p
+<!-- 输入你安装 MySQL 时设置的 root 密码 --></pre>
+</div>
+
+<div class="step">
+<span class="step-num">2</span><strong>创建数据库</strong>
+<pre>CREATE DATABASE pet_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE pet_db;</pre>
+</div>
+
+<div class="step">
+<span class="step-num">3</span><strong>导入建表脚本</strong>
+<p>在 MySQL 命令行中执行项目目录下的 SQL 脚本（按文件名顺序执行）：</p>
+<pre>-- 先执行基础建表
+source c:/Users/HP/Desktop/pet/pet-backend/src/main/resources/sql/schema.sql;
+-- 再按 M3 → M4 → ... → M13 的顺序执行迁移脚本
+source c:/Users/HP/Desktop/pet/pet-backend/src/main/resources/sql/m3.sql;
+source c:/Users/HP/Desktop/pet/pet-backend/src/main/resources/sql/m4.sql;
+-- ... 依次执行到 m13.sql</pre>
+<div class="warn"><strong>注意：</strong>迁移脚本必须按编号顺序执行，后面的脚本依赖前面的表结构。</div>
+</div>
+
+<div class="step">
+<span class="step-num">4</span><strong>验证</strong>
+<pre>SHOW TABLES;
+<!-- 应该看到 26 张表 --></pre>
+</div>
+
+<!-- ==================== 3. 后端配置与启动 ==================== -->
+<h2>3. 后端配置与启动</h2>
+
+<h3>3.1 数据库连接配置</h3>
+<p>打开 <code>pet-backend/src/main/resources/application.yml</code>，修改数据库连接信息：</p>
+<pre>spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/pet_db?useSSL=false&amp;serverTimezone=Asia/Shanghai
+    username: root
+    password: <!-- 你安装 MySQL 时设置的密码 --></pre>
+
+<h3>3.2 SMTP 邮箱配置（注册验证码用）</h3>
+<p>注册时系统需要发验证码邮件。就像寄信需要知道邮局地址和寄信人信息，这里需要配 4 个值：</p>
+<pre>spring:
+  mail:
+    # 1) host:QQ邮箱用 smtp.qq.com;163邮箱用 smtp.163.com;Outlook用 smtp.office365.com
+    host: smtp.qq.com
+    # 2) port:SSL 加密端口一般用 465
+    port: 465
+    # 3) username:你的邮箱地址，如 12345@qq.com
+    username: <你的邮箱@qq.com>
+    # 4) password:邮箱「授权码」，不是登录密码！
+    #    QQ邮箱 → 设置 → 账户 → 开启 SMTP 服务 → 生成授权码
+    password: <你的邮箱授权码>
+    # 5) from:发件人，一般和 username 一样
+    from: <你的邮箱@qq.com></pre>
+
+<div class="danger">
+<strong>安全红线：</strong>授权码是敏感信息，<strong>不要发到聊天里</strong>，也<strong>不要提交到 Git</strong>。如果项目要上传 GitHub，把 application.yml 加入 .gitignore。
+</div>
+
+<h3>3.3 启动后端</h3>
+<div class="step">
+<span class="step-num">1</span><strong>用 IDEA 打开后端项目</strong>
+<p>File → Open → 选择 <code>c:\Users\HP\Desktop\pet\pet-backend</code> 文件夹 → 信任项目</p>
+</div>
+<div class="step">
+<span class="step-num">2</span><strong>等待 Maven 下载依赖</strong>
+<p>打开后 IDEA 右下角会显示"正在导入 Maven 依赖"，等进度条走完（第一次可能需要 3-5 分钟）。</p>
+</div>
+<div class="step">
+<span class="step-num">3</span><strong>运行启动类</strong>
+<p>在 IDEA 左侧找到 <code>PetApplication.java</code>（路径：src/main/java/com/pet/PetApplication.java），右键 → Run。</p>
+</div>
+<div class="step">
+<span class="step-num">4</span><strong>验证后端启动成功</strong>
+<p>看到控制台输出 <code>Started PetApplication in x.xxx seconds</code> 就说明启动成功了。</p>
+<p>浏览器打开 <code>http://localhost:8080/api/health</code>，看到 JSON 返回就说明后端正常。</p>
+</div>
+
+<!-- ==================== 4. 前端配置与启动 ==================== -->
+<h2>4. 前端配置与启动</h2>
+
+<div class="step">
+<span class="step-num">1</span><strong>安装前端依赖</strong>
+<p>打开命令行，进入前端目录：</p>
+<pre>cd c:\Users\HP\Desktop\pet\pet-client
+npm install</pre>
+<p>第一次安装需要 2-3 分钟，等出现 <code>added xxx packages</code> 就完成了。</p>
+</div>
+
+<div class="step">
+<span class="step-num">2</span><strong>启动开发模式</strong>
+<pre>npm run electron:dev</pre>
+<p>这会同时启动 Vite 开发服务器（端口 5173）和 Electron 桌面窗口。</p>
+</div>
+
+<div class="step">
+<span class="step-num">3</span><strong>验证</strong>
+<p>Electron 窗口自动弹出，显示登录界面 = 成功。桌面右下角出现宠物图标 = 悬浮窗已启动。</p>
+</div>
+
+<!-- ==================== 5. 日常使用指南 ==================== -->
+<h2>5. 日常使用指南</h2>
+
+<h3>5.1 第一次使用</h3>
+<ol>
+  <li><strong>注册账号</strong>：输入用户名、密码、邮箱 → 获取验证码 → 填密保问题和答案 → 注册。<br><span style="color:#9a8a75">第一个注册的用户自动成为管理员。</span></li>
+  <li><strong>登录</strong>：用刚注册的账号登录。</li>
+  <li><strong>抽蛋领养</strong>：点击"抽蛋"按钮，给宠物起个名字（最多 12 字，只能起一次！），随机获得一只宠物。</li>
+  <li><strong>喂食</strong>：新宠物送 10 条小鱼干。去"商店"买更多食物，在"宠物"面板喂食。</li>
+</ol>
+
+<h3>5.2 宠物养成</h3>
+<table>
+<tr><th>操作</th><th>怎么做</th><th>效果</th></tr>
+<tr><td>喂食</td><td>宠物面板 → 选食物 → 喂</td><td>饥饿度 +，心情 +</td></tr>
+<tr><td>玩耍</td><td>宠物面板 → 选玩耍模式</td><td>心情 +，饥饿 -，经验 +</td></tr>
+<tr><td>查看状态</td><td>宠物面板自动显示</td><td>饥饿度/心情/等级/成长阶段</td></tr>
+<tr><td>悬浮宠物喂食</td><td>右键悬浮宠物 → 喂食</td><td>自动选背包第一种食物</td></tr>
+</table>
+
+<div class="warn">
+<strong>注意：</strong>宠物会随时间饥饿！饥饿降到 0 会病危，病危 24 小时不喂食会死亡。死亡后需完成反思答题才能重新抽蛋。
+</div>
+
+<h3>5.3 学习辅助</h3>
+<table>
+<tr><th>功能</th><th>怎么用</th></tr>
+<tr><td>日程</td><td>日程面板 → 新增 → 填标题/时间/优先级/标签。到点自动弹通知。</td></tr>
+<tr><td>番茄钟</td><td>番茄钟面板 → 设时长 → 开始。悬浮宠物头顶显示倒计时，完成领游戏币。</td></tr>
+<tr><td>桌面整理</td><td>桌面面板 → 扫描 → 预览 → 执行。可撤销。</td></tr>
+<tr><td>日程统计</td><td>日程面板 → 统计页 → 饼图/柱状图查看完成情况</td></tr>
+</table>
+
+<h3>5.4 社交互动</h3>
+<table>
+<tr><th>功能</th><th>怎么用</th></tr>
+<tr><td>加好友</td><td>好友面板 → 搜索用户名 → 发申请 → 对方收件箱接受</td></tr>
+<tr><td>聊天</td><td>收件箱面板 → 选好友 → 发消息</td></tr>
+<tr><td>配种</td><td>雄性宠物上架 → 市场发起配种 → 对方接受 → 3 天后产崽</td></tr>
+<tr><td>领幼崽</td><td>幼崽面板 → 反思答题 → 领取</td></tr>
+</table>
+
+<h3>5.5 AI 对话配置</h3>
+<ol>
+  <li>设置面板 → AI 服务商列表（14 家可选）</li>
+  <li>选一家你有 Key 的服务商（如 DeepSeek）</li>
+  <li>填入 API Key（去服务商官网注册获取）</li>
+  <li>聊天面板 → 发消息 → AI 回复</li>
+</ol>
+<div class="tip"><strong>提示：</strong>Key 在后端 AES 加密存储，前端脱敏显示（sk-****1234），不会泄露。</div>
+
+<h3>5.6 拍照与相册</h3>
+<ol>
+  <li>相机面板 → 允许摄像头权限</li>
+  <li>点击拍照 → 照片自动存入当前宠物相册</li>
+  <li>相册面板 → 按宠物分组查看</li>
+</ol>
+
+<!-- ==================== 6. 常见问题 ==================== -->
+<h2>6. 常见问题（FAQ）</h2>
+
+<h3>Q1: 启动后端报"Access denied for user 'root'"</h3>
+<p><strong>原因：</strong>数据库密码不对。</p>
+<p><strong>解决：</strong>检查 <code>application.yml</code> 里的 <code>spring.datasource.password</code> 是否和你安装 MySQL 时设的密码一致。</p>
+
+<h3>Q2: 注册时收不到验证码邮件</h3>
+<p><strong>原因：</strong>SMTP 配置不对，或授权码错误。</p>
+<p><strong>解决：</strong></p>
+<ol>
+  <li>确认 <code>application.yml</code> 中的 <code>host</code> 和你的邮箱匹配（QQ 邮箱用 smtp.qq.com）</li>
+  <li>确认 <code>password</code> 填的是<strong>授权码</strong>而不是邮箱登录密码</li>
+  <li>QQ 邮箱获取授权码：登录 QQ 邮箱 → 设置 → 账户 → POP3/SMTP 服务 → 开启 → 生成授权码</li>
+  <li>修改配置后<strong>重启后端</strong></li>
+</ol>
+
+<h3>Q3: 前端界面模糊/图标看不清</h3>
+<p><strong>原因：</strong>Windows 高 DPI 缩放（125%/150%）+ 禁用硬件加速导致软件渲染模糊。</p>
+<p><strong>已修复：</strong>main.js 中已添加 <code>high-dpi-support</code> 和 <code>force-device-scale-factor</code> 开关。如果仍然模糊，尝试：</p>
+<ol>
+  <li>Windows 设置 → 显示 → 缩放设为 100%</li>
+  <li>右键 Electron 快捷方式 → 属性 → 兼容性 → 更改高 DPI 设置 → 勾选"替代高 DPI 缩放行为" → 选"应用程序"</li>
+</ol>
+
+<h3>Q4: 悬浮宠物不显示</h3>
+<p><strong>解决：</strong>右键系统托盘图标（右下角）→ "显示/隐藏悬浮宠物"。</p>
+
+<h3>Q5: 摄像头打不开</h3>
+<p><strong>原因：</strong>Electron 默认拒绝摄像头权限。</p>
+<p><strong>已修复：</strong>main.js 中已配置 <code>setPermissionRequestHandler</code> 放行 media 权限。如果仍不行，检查 Windows 隐私设置中是否允许应用使用摄像头。</p>
+
+<h3>Q6: AI 对话不回复</h3>
+<p><strong>原因：</strong>未配置 API Key 或 Key 无效。</p>
+<p><strong>解决：</strong>设置面板 → 配置服务商 Key → 确认 Key 有效（去服务商官网查看额度/余额）。</p>
+
+<h3>Q7: 端口被占用（8080 或 5173）</h3>
+<p><strong>解决：</strong>命令行执行 <code>netstat -ano | findstr :8080</code> 找到占用进程的 PID，然后 <code>taskkill /PID xxx /F</code> 结束它。</p>
+
+<h3>Q8: 后端启动报"Table 'pet_db.xxx' doesn't exist"</h3>
+<p><strong>原因：</strong>SQL 脚本没有全部执行。</p>
+<p><strong>解决：</strong>按顺序执行 schema.sql 和所有 m3-m13.sql 迁移脚本。</p>
+
+</body>
+</html>

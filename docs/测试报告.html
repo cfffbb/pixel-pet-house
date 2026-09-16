@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 宠物助手 — 测试报告</title>
+<style>
+  :root {
+    --bg: #fdf6e3; --fg: #3a3226; --accent: #d48142; --border: #d9c6a9;
+    --code-bg: #f5ede0; --table-head: #ffe9c9; --table-alt: #faf3e6;
+    --pass: #2e8b57; --fail: #d1453b; --skip: #e8a33d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.8;
+    max-width: 900px; margin: 0 auto; padding: 40px 30px;
+  }
+  h1 { font-size: 26px; text-align: center; margin-bottom: 8px; color: #6b4f3a; }
+  h2 { font-size: 20px; margin: 32px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--accent); color: #6b4f3a; }
+  h3 { font-size: 16px; margin: 20px 0 8px; color: #8a6342; }
+  p { margin: 6px 0; font-size: 14px; }
+  ul, ol { margin: 6px 0 6px 22px; font-size: 14px; }
+  li { margin: 3px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13px; }
+  th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+  th { background: var(--table-head); }
+  tr:nth-child(even) { background: var(--table-alt); }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-size: 13px; }
+  .meta { text-align: center; color: #9a8a75; font-size: 13px; margin-bottom: 30px; }
+  .pass { color: var(--pass); font-weight: bold; }
+  .fail { color: var(--fail); font-weight: bold; }
+  .skip { color: var(--skip); font-weight: bold; }
+  .summary-box { background: #fffaf0; border: 2px solid var(--border); border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+  .summary-box h3 { margin-top: 0; }
+  @media print { body { max-width: none; } }
+</style>
+</head>
+<body>
+
+<h1>AI 宠物助手 — 测试报告</h1>
+<p class="meta">
+  文档版本：V1.0 &nbsp;|&nbsp; 测试日期：2026-08-17 &nbsp;|&nbsp; 测试人：项目组<br>
+  被测系统：pet-backend 0.0.1-SNAPSHOT + pet-client（Electron + Vue 3）
+</p>
+
+<!-- ==================== 1. 测试概述 ==================== -->
+<h2>1. 测试概述</h2>
+
+<h3>1.1 测试目标</h3>
+<p>验证系统核心业务逻辑的正确性、安全工具的可靠性、Spring 上下文的完整性，以及主要功能在 Electron 桌面环境下的可用性。</p>
+
+<h3>1.2 测试范围</h3>
+<table>
+<tr><th>类型</th><th>范围</th><th>工具</th></tr>
+<tr><td>单元测试</td><td>JWT 工具、AES 加密、宠物状态推进、番茄钟业务逻辑</td><td>JUnit 5 + Mockito + H2</td></tr>
+<tr><td>集成测试</td><td>Spring 上下文加载、Bean 装配</td><td>@SpringBootTest + H2 内存库</td></tr>
+<tr><td>功能测试</td><td>13 大功能模块的手动验证</td><td>Electron 桌面应用 + Postman</td></tr>
+</table>
+
+<h3>1.3 测试环境</h3>
+<table>
+<tr><th>项</th><th>配置</th></tr>
+<tr><td>操作系统</td><td>Windows 11 Home China</td></tr>
+<tr><td>JDK</td><td>OpenJDK 21.0.10</td></tr>
+<tr><td>Maven</td><td>IDEA 内置 Maven 3（maven-plugin/lib/maven3）</td></tr>
+<tr><td>测试数据库</td><td>H2 内存数据库（MODE=MySQL，不依赖真实 MySQL）</td></tr>
+<tr><td>Mock 框架</td><td>Mockito 5（MockitoExtension，STRICT_STUBS）</td></tr>
+<tr><td>断言库</td><td>AssertJ（spring-boot-starter-test 自带）</td></tr>
+</table>
+
+<!-- ==================== 2. 单元测试结果 ==================== -->
+<h2>2. 单元测试结果</h2>
+
+<div class="summary-box">
+<h3>总览</h3>
+<table>
+<tr><th>指标</th><th>数值</th></tr>
+<tr><td>测试类数量</td><td>5</td></tr>
+<tr><td>测试用例总数</td><td>31</td></tr>
+<tr><td>通过</td><td class="pass">31</td></tr>
+<tr><td>失败</td><td class="fail">0</td></tr>
+<tr><td>跳过</td><td class="skip">0</td></tr>
+<tr><td>通过率</td><td class="pass">100%</td></tr>
+<tr><td>构建结果</td><td class="pass">BUILD SUCCESS</td></tr>
+</table>
+</div>
+
+<h3>2.1 PetApplicationTests（Spring 上下文加载）</h3>
+<table>
+<tr><th>#</th><th>测试方法</th><th>说明</th><th>结果</th></tr>
+<tr><td>1</td><td>contextLoads</td><td>验证 Spring 容器能正常启动，所有 Bean 装配无环、无缺配置</td><td class="pass">PASS</td></tr>
+</table>
+
+<h3>2.2 JwtUtilTest（JWT 工具）</h3>
+<table>
+<tr><th>#</th><th>测试方法</th><th>说明</th><th>结果</th></tr>
+<tr><td>2</td><td>createAndParse_roundtrip_keepsClaims</td><td>签发 token → 解析，验证 userId/username/role 保持一致</td><td class="pass">PASS</td></tr>
+<tr><td>3</td><td>parse_tamperedToken_throws</td><td>篡改 token 后解析应失败</td><td class="pass">PASS</td></tr>
+<tr><td>4</td><td>parse_expiredToken_throws</td><td>过期 token 解析应失败</td><td class="pass">PASS</td></tr>
+</table>
+
+<h3>2.3 ApiKeyCipherTest（AES 加密）</h3>
+<table>
+<tr><th>#</th><th>测试方法</th><th>说明</th><th>结果</th></tr>
+<tr><td>5</td><td>encryptThenDecrypt_roundtrip_restoresPlain</td><td>加密 → 解密，验证明文可还原</td><td class="pass">PASS</td></tr>
+<tr><td>6</td><td>decrypt_invalidCipher_returnsNull</td><td>非法密文解密返回 null，不抛异常</td><td class="pass">PASS</td></tr>
+</table>
+
+<h3>2.4 PomodoroServiceTest（番茄钟业务）</h3>
+<table>
+<tr><th>#</th><th>测试方法</th><th>说明</th><th>结果</th></tr>
+<tr><td>7</td><td>calcLevel_boundaries</td><td>等级边界：0→1级, 1199→1级, 1200→2级, 2400→3级</td><td class="pass">PASS</td></tr>
+<tr><td>8</td><td>complete_grantsCoins</td><td>完成结算：专注分钟 × 1 币</td><td class="pass">PASS</td></tr>
+<tr><td>9</td><td>pause_exceedsMax_throws</td><td>暂停超过 2 次应抛异常</td><td class="pass">PASS</td></tr>
+<tr><td>10</td><td>complete_notOwner_throws</td><td>非归属用户操作应抛异常</td><td class="pass">PASS</td></tr>
+<tr><td>11</td><td>abandon_grantsZeroCoins</td><td>放弃得 0 币</td><td class="pass">PASS</td></tr>
+</table>
+
+<h3>2.5 PetServiceTest（宠物核心业务）</h3>
+<table>
+<tr><th>#</th><th>测试方法</th><th>说明</th><th>结果</th></tr>
+<tr><td>12</td><td>refreshState_nullPet_doesNothing</td><td>null 宠物不抛异常，不调 Mapper</td><td class="pass">PASS</td></tr>
+<tr><td>13</td><td>refreshState_deadPet_doesNothing</td><td>已死亡宠物不做状态推进</td><td class="pass">PASS</td></tr>
+<tr><td>14</td><td>refreshState_hungerDropsNormally</td><td>24h 后饥饿度从 100 降到 67（按公式验证）</td><td class="pass">PASS</td></tr>
+<tr><td>15</td><td>refreshState_hungerToZero_entersDanger</td><td>饥饿降到 0 → 状态变为 DANGER</td><td class="pass">PASS</td></tr>
+<tr><td>16</td><td>refreshState_dangerOver24h_diesAndCreatesGravestone</td><td>病危超 24h → 死亡 + 创建墓碑</td><td class="pass">PASS</td></tr>
+<tr><td>17</td><td>refreshState_typeNotFound_doesNothing</td><td>种类查不到时直接返回，不写库</td><td class="pass">PASS</td></tr>
+<tr><td>18</td><td>draw_emptyName_throws</td><td>名字为空 → 抛异常</td><td class="pass">PASS</td></tr>
+<tr><td>19</td><td>draw_nameTooLong_throws</td><td>名字超 12 字 → 抛异常</td><td class="pass">PASS</td></tr>
+<tr><td>20</td><td>draw_alreadyHasPet_throws</td><td>已有活宠 → 抛异常</td><td class="pass">PASS</td></tr>
+<tr><td>21</td><td>draw_hasUnansweredGravestone_throws</td><td>有未答题墓碑 → 抛异常</td><td class="pass">PASS</td></tr>
+<tr><td>22</td><td>draw_adminWithCode_createsSpecifiedType</td><td>管理员指定种类 → 正常创建宠物</td><td class="pass">PASS</td></tr>
+<tr><td>23</td><td>stageOf_boundaries</td><td>4 个成长阶段边界值</td><td class="pass">PASS</td></tr>
+<tr><td>24</td><td>ageDays_nullHatchedAt_returnsZero</td><td>出生时间为 null → 年龄 0</td><td class="pass">PASS</td></tr>
+<tr><td>25</td><td>isMature_boundary</td><td>2 天未成熟，3 天成熟</td><td class="pass">PASS</td></tr>
+<tr><td>26</td><td>setListed_female_throws</td><td>雌性不能上架</td><td class="pass">PASS</td></tr>
+<tr><td>27</td><td>setListed_deadPet_throws</td><td>死亡宠物不能上架</td><td class="pass">PASS</td></tr>
+<tr><td>28</td><td>setListed_notMature_throws</td><td>未成熟不能上架（非管理员）</td><td class="pass">PASS</td></tr>
+<tr><td>29</td><td>setListed_inCoolDown_throws</td><td>冷却中不能上架</td><td class="pass">PASS</td></tr>
+<tr><td>30</td><td>setListed_unlist_succeeds</td><td>下架操作正常</td><td class="pass">PASS</td></tr>
+<tr><td>31</td><td>rename_alwaysThrows</td><td>改名总是被拒绝</td><td class="pass">PASS</td></tr>
+</table>
+
+<!-- ==================== 3. 功能测试用例 ==================== -->
+<h2>3. 功能测试用例</h2>
+<p>以下为手动功能测试用例，覆盖 13 大功能模块的正常流程与异常流程。</p>
+
+<h3>3.1 用户认证</h3>
+<table>
+<tr><th>用例 ID</th><th>操作步骤</th><th>预期结果</th><th>状态</th></tr>
+<tr><td>FT-AUTH-01</td><td>输入用户名/密码/邮箱 → 点击发送验证码</td><td>邮箱收到 6 位验证码</td><td class="pass">通过（需配 SMTP）</td></tr>
+<tr><td>FT-AUTH-02</td><td>输入正确验证码和密保 → 注册</td><td>注册成功，首用户自动 ADMIN</td><td class="pass">通过</td></tr>
+<tr><td>FT-AUTH-03</td><td>输入正确用户名/密码 → 登录</td><td>登录成功，跳转主界面</td><td class="pass">通过</td></tr>
+<tr><td>FT-AUTH-04</td><td>输入错误密码 → 登录</td><td>提示"用户名或密码错误"</td><td class="pass">通过</td></tr>
+<tr><td>FT-AUTH-05</td><td>密保问题找回密码</td><td>答案正确后可重置密码</td><td class="pass">通过</td></tr>
+</table>
+
+<h3>3.2 宠物养成</h3>
+<table>
+<tr><th>用例 ID</th><th>操作步骤</th><th>预期结果</th><th>状态</th></tr>
+<tr><td>FT-PET-01</td><td>新用户点击"抽蛋"，输入名字</td><td>获得随机宠物（70%普通/25%稀有/5%传说）</td><td class="pass">通过</td></tr>
+<tr><td>FT-PET-02</td><td>查看"我的宠物"</td><td>显示宠物属性、饥饿度、心情、成长阶段</td><td class="pass">通过</td></tr>
+<tr><td>FT-PET-03</td><td>选择玩耍模式 → 确认</td><td>心情/饥饿/经验按预期变化</td><td class="pass">通过</td></tr>
+<tr><td>FT-PET-04</td><td>尝试改名</td><td>提示"名字只能起一次，不能更改"</td><td class="pass">通过</td></tr>
+<tr><td>FT-PET-05</td><td>不喂食等待饥饿降到 0</td><td>宠物进入病危状态，24h 后死亡</td><td class="skip">需长时间（逻辑已由单测验证）</td></tr>
+</table>
+
+<h3>3.3 商店与喂食</h3>
+<table>
+<tr><th>用例 ID</th><th>操作步骤</th><th>预期结果</th><th>状态</th></tr>
+<tr><td>FT-SHOP-01</td><td>打开商店 → 购买食物</td><td>扣除游戏币，背包增加对应物品</td><td class="pass">通过</td></tr>
+<tr><td>FT-SHOP-02</td><td>游戏币不足时购买</td><td>提示"游戏币不足"</td><td class="pass">通过</td></tr>
+<tr><td>FT-SHOP-03</td><td>喂食 → 消耗食物</td><td>饥饿度/心情恢复，病危可救回</td><td class="pass">通过</td></tr>
+</table>
+
+<h3>3.4 日程与番茄钟</h3>
+<table>
+<tr><th>用例 ID</th><th>操作步骤</th><th>预期结果</th><th>状态</th></tr>
+<tr><td>FT-SCHED-01</td><td>新增日程 → 设置时间和标签</td><td>日程出现在列表中</td><td class="pass">通过</td></tr>
+<tr><td>FT-SCHED-02</td><td>日程到点</td><td>系统通知弹出（10% 概率被宠物卖萌替代）</td><td class="pass">通过</td></tr>
+<tr><td>FT-SCHED-03</td><td>开始番茄钟 25 分钟</td><td>悬浮宠物头顶显示倒计时</td><td class="pass">通过</td></tr>
+<tr><td>FT-SCHED-04</td><td>番茄钟完成后领奖</td><td>获得 25 币，等级按累计分钟计算</td><td class="pass">通过</td></tr>
+<tr><td>FT-SCHED-05</td><td>番茄钟暂停 3 次</td><td>第 3 次暂停被拒绝</td><td class="pass">通过</td></tr>
+</table>
+
+<h3>3.5 社交与配种</h3>
+<table>
+<tr><th>用例 ID</th><th>操作步骤</th><th>预期结果</th><th>状态</th></tr>
+<tr><td>FT-SOC-01</td><td>搜索用户 → 发好友申请</td><td>对方收件箱收到申请</td><td class="pass">通过</td></tr>
+<tr><td>FT-SOC-02</td><td>对方接受好友申请</td><td>双向好友关系建立</td><td class="pass">通过</td></tr>
+<tr><td>FT-SOC-03</td><td>雄性宠物上架配种市场</td><td>出现在市场列表</td><td class="pass">通过</td></tr>
+<tr><td>FT-SOC-04</td><td>发起配种申请</td><td>对方收件箱收到配种请求</td><td class="pass">通过</td></tr>
+</table>
+
+<h3>3.6 桌面与悬浮宠物</h3>
+<table>
+<tr><th>用例 ID</th><th>操作步骤</th><th>预期结果</th><th>状态</th></tr>
+<tr><td>FT-DESK-01</td><td>扫描桌面 → 预览整理计划</td><td>显示文件移动计划</td><td class="pass">通过</td></tr>
+<tr><td>FT-DESK-02</td><td>执行整理</td><td>文件移动到对应分区</td><td class="pass">通过</td></tr>
+<tr><td>FT-DESK-03</td><td>撤销整理</td><td>文件移回原位</td><td class="pass">通过</td></tr>
+<tr><td>FT-FLOAT-01</td><td>悬浮宠物拖拽</td><td>可自由拖动位置</td><td class="pass">通过</td></tr>
+<tr><td>FT-FLOAT-02</td><td>点击悬浮宠物 → 菜单 → 喂食</td><td>自动投喂背包第一种食物</td><td class="pass">通过</td></tr>
+</table>
+
+<h3>3.7 AI 对话与摄像头</h3>
+<table>
+<tr><th>用例 ID</th><th>操作步骤</th><th>预期结果</th><th>状态</th></tr>
+<tr><td>FT-CHAT-01</td><td>设置中配置 AI Key → 发送文字消息</td><td>收到 AI 回复</td><td class="pass">通过（需配 Key）</td></tr>
+<tr><td>FT-CAM-01</td><td>打开摄像头 → 拍照</td><td>照片保存到相册</td><td class="pass">通过</td></tr>
+</table>
+
+<!-- ==================== 4. 测试结论 ==================== -->
+<h2>4. 测试结论</h2>
+
+<div class="summary-box">
+<h3>结论摘要</h3>
+<table>
+<tr><th>维度</th><th>结果</th><th>说明</th></tr>
+<tr><td>单元测试</td><td class="pass">100% 通过 (31/31)</td><td>覆盖安全工具 + 核心业务逻辑</td></tr>
+<tr><td>集成测试</td><td class="pass">通过</td><td>Spring 上下文正常加载</td></tr>
+<tr><td>功能测试</td><td class="pass">核心功能全部可用</td><td>需配置的功能（SMTP/AI Key）在配置后正常</td></tr>
+<tr><td>已知限制</td><td class="skip">2 项需长时间验证</td><td>宠物饿死流程（需 24h+）、语音识别精度</td></tr>
+</table>
+</div>
+
+<h3>4.1 覆盖率说明</h3>
+<ul>
+  <li><strong>安全层</strong>：JWT 签发/校验/防篡改/防过期 100% 覆盖；AES 加解密往返 + 异常处理 100% 覆盖</li>
+  <li><strong>宠物业务</strong>：状态推进（正常/饥饿到 0/病危死亡/异常输入）6 个场景；抽蛋校验 5 个场景；成长/上架 8 个场景</li>
+  <li><strong>番茄钟</strong>：等级计算/完成结算/暂停限制/归属校验/放弃 5 个场景</li>
+  <li><strong>未覆盖</strong>：前端 Vue 组件（建议后续引入 vitest）、Controller 层冒烟测试（建议后续引入 MockMvc）</li>
+</ul>
+
+<h3>4.2 风险与建议</h3>
+<table>
+<tr><th>风险</th><th>等级</th><th>建议</th></tr>
+<tr><td>AI 语音识别精度依赖浏览器</td><td>低</td><td>作为辅助功能保留，不影响核心流程</td></tr>
+<tr><td>SMTP 配置错误导致验证码发不出</td><td>中</td><td>部署手册中已给出详细配置步骤</td></tr>
+<tr><td>透明悬浮窗在特定显卡上崩溃</td><td>低</td><td>已禁用硬件加速 + DPI 感知 + 崩溃自动重载</td></tr>
+<tr><td>前端组件无自动化测试</td><td>中</td><td>建议后续引入 vitest 覆盖 http.js 拦截器</td></tr>
+</table>
+
+</body>
+</html>

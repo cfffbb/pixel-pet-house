@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pet — 协作机制说明</title>
+<style>
+  :root {
+    --bg: #fdf6e3; --fg: #3a3226; --accent: #d48142; --border: #d9c6a9;
+    --code-bg: #f5ede0; --table-head: #ffe9c9; --table-alt: #faf3e6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.8;
+    max-width: 960px; margin: 0 auto; padding: 40px 30px;
+  }
+  h1 { font-size: 24px; text-align: center; margin-bottom: 6px; color: #6b4f3a; }
+  h2 { font-size: 20px; margin: 30px 0 10px; padding-bottom: 6px; border-bottom: 2px solid var(--accent); color: #6b4f3a; }
+  h3 { font-size: 16px; margin: 18px 0 8px; color: #8a6342; }
+  p { margin: 6px 0; font-size: 14px; }
+  ul, ol { margin: 6px 0 6px 22px; font-size: 14px; }
+  li { margin: 4px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13px; }
+  th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--table-head); }
+  tr:nth-child(even) { background: var(--table-alt); }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .meta { text-align: center; color: #9a8a75; font-size: 13px; margin-bottom: 24px; }
+  .role-card { display: inline-block; width: 45%; vertical-align: top; margin: 6px; padding: 12px 16px; border: 2px solid var(--border); border-radius: 10px; background: #fffaf0; }
+  .role-card h4 { color: #6b4f3a; margin-bottom: 4px; }
+  .meeting-box { background: #fffaf0; border-left: 4px solid var(--accent); padding: 10px 16px; margin: 8px 0; border-radius: 0 8px 8px 0; }
+  .escalation { background: #fde8e8; border: 2px dashed #d1453b; border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
+  @media print { body { max-width: none; } }
+</style>
+</head>
+<body>
+
+<h1>Pet 项目 — 协作机制说明</h1>
+<p class="meta">
+  文档编号：PET-PM-002 &nbsp;|&nbsp; 版本：V1.0 &nbsp;|&nbsp; 日期：2026-08-17<br>
+  编写人：PM &nbsp;|&nbsp; 关联文档：PET-PM-001（迭代管理文档）
+</p>
+
+<!-- ==================== 1. 角色分工 ==================== -->
+<h2>1. 角色分工矩阵</h2>
+
+<div class="role-card">
+<h4>🎯 产品经理（PM）— 统筹全局</h4>
+<p><strong>职责：</strong></p>
+<ul>
+  <li>需求管理、优先级排序、文档管控</li>
+  <li>主持所有会议，产出会议纪要</li>
+  <li>技术评审、协调调度</li>
+  <li>需求变更评估与流程推进</li>
+  <li>向老板汇报、申请资源</li>
+</ul>
+<p><strong>不直接写代码</strong>，但具备审查和决策能力。</p>
+</div>
+
+<div class="role-card">
+<h4>🎨 前端专家 — UI 与交互</h4>
+<p><strong>职责：</strong></p>
+<ul>
+  <li>所有 UI/HTML/CSS/JS/Vue 组件</li>
+  <li>审美把关、素材管理（联网搜索）</li>
+  <li>Electron 主进程+渲染进程</li>
+  <li>打包配置（electron-builder）</li>
+  <li>兼容性保障（Windows/DPI）</li>
+</ul>
+<p><strong>不涉及</strong>后端逻辑和数据库。</p>
+</div>
+
+<div class="role-card">
+<h4>⚙️ 后端专家 — Java 后端</h4>
+<p><strong>职责：</strong></p>
+<ul>
+  <li>Java 后端、接口规范、数据库</li>
+  <li>安全管控（JWT/AES/SQL防注入）</li>
+  <li>打包部署方案（Maven/JAR）</li>
+  <li>API 文档维护</li>
+  <li>性能优化</li>
+</ul>
+<p><strong>不涉及</strong> UI 和交互。</p>
+</div>
+
+<div class="role-card">
+<h4>🧪 测试 — 质量保障</h4>
+<p><strong>职责：</strong></p>
+<ul>
+  <li>功能测试、回归测试</li>
+  <li>缺陷追踪、质量评估</li>
+  <li>测试用例编写、测试报告产出</li>
+  <li>接口冒烟测试</li>
+</ul>
+<p><strong>独立于开发</strong>，不受开发影响。</p>
+</div>
+
+<div class="role-card" style="width:95%;background:#fff3cd;border-color:#e8a33d;">
+<h4>👑 老板 — 最终决策者</h4>
+<p><strong>职责：</strong>审批需求变更、功能增减、资源调配。拥有最终决策权。不参与日常开发，仅在关键节点审批。</p>
+</div>
+
+<h3>1.1 职责边界矩阵（RACI）</h3>
+<table>
+<tr><th>活动</th><th>PM</th><th>前端</th><th>后端</th><th>测试</th><th>老板</th></tr>
+<tr><td>需求分析/SRS</td><td>R/A</td><td>C</td><td>C</td><td>C</td><td>I</td></tr>
+<tr><td>接口规范设计</td><td>A</td><td>C</td><td>R</td><td>I</td><td>I</td></tr>
+<tr><td>UI 设计/实现</td><td>A</td><td>R</td><td>I</td><td>C</td><td>I</td></tr>
+<tr><td>后端开发</td><td>A</td><td>I</td><td>R</td><td>C</td><td>I</td></tr>
+<tr><td>测试用例/执行</td><td>A</td><td>C</td><td>C</td><td>R</td><td>I</td></tr>
+<tr><td>打包部署</td><td>A</td><td>R</td><td>R</td><td>C</td><td>I</td></tr>
+<tr><td>需求变更审批</td><td>R</td><td>C</td><td>C</td><td>C</td><td>A</td></tr>
+<tr><td>阶段评审</td><td>R/A</td><td>C</td><td>C</td><td>C</td><td>I</td></tr>
+</table>
+<p style="font-size:12px;color:#9a8a75;">R=负责执行 A=批准 C= consulted I= informed</p>
+
+<!-- ==================== 2. 会议制度 ==================== -->
+<h2>2. 会议制度</h2>
+
+<div class="meeting-box">
+<h3>2.1 每日站会（15 分钟）</h3>
+<table>
+<tr><th>项</th><th>内容</th></tr>
+<tr><td>频率</td><td>每天 1 次（建议 9:00 或 10:00）</td></tr>
+<tr><td>主持</td><td>PM</td></tr>
+<tr><td>参与</td><td>前端、后端、测试（老板可选）</td></tr>
+<tr><td>议程</td><td>每人 3 分钟：①昨日完成 ②今日计划 ③遇到的阻碍</td></tr>
+<tr><td>产出</td><td>《站会纪要》更新至迭代管理文档待办列表</td></tr>
+</table>
+</div>
+
+<div class="meeting-box">
+<h3>2.2 阶段评审会</h3>
+<table>
+<tr><th>项</th><th>内容</th></tr>
+<tr><td>触发</td><td>每个产出节点结束后（SRS 定稿 / 接口规范完成 / UI 优化完成 / 打包完成 / 测试完成）</td></tr>
+<tr><td>主持</td><td>PM</td></tr>
+<tr><td>参与</td><td>全员 + 老板</td></tr>
+<tr><td>议程</td><td>①审查该阶段文档/代码/测试报告 ②确认是否达标 ③决定是否进入下一阶段</td></tr>
+<tr><td>产出</td><td>《阶段评审纪要》+ 评审结论（通过/有条件通过/不通过）</td></tr>
+<tr><td>不通过处理</td><td>记录缺陷→指派修复→重新评审（不跳阶段）</td></tr>
+</table>
+</div>
+
+<div class="meeting-box" style="border-color:#d1453b;">
+<h3>2.3 紧急会议</h3>
+<table>
+<tr><th>项</th><th>内容</th></tr>
+<tr><td>触发条件</td><td>①测试发现致命/严重缺陷 ②重大需求变更 ③技术方案无法落地</td></tr>
+<tr><td>主持</td><td>PM（立即召集）</td></tr>
+<tr><td>参与</td><td>相关角色 + 老板</td></tr>
+<tr><td>议程</td><td>①问题描述 ②影响评估 ③决策方案 ④分工执行</td></tr>
+<tr><td>产出</td><td>《紧急会议纪要》+ 决策记录 + 紧急待办</td></tr>
+<tr><td>时效要求</td><td>触发后 30 分钟内召开，2 小时内出决策</td></tr>
+</table>
+</div>
+
+<div class="meeting-box">
+<h3>2.4 周度复盘会</h3>
+<table>
+<tr><th>项</th><th>内容</th></tr>
+<tr><td>频率</td><td>每周最后一天（建议周五 16:00）</td></tr>
+<tr><td>主持</td><td>PM</td></tr>
+<tr><td>参与</td><td>全员 + 老板</td></tr>
+<tr><td>议程</td><td>①本周进度回顾 ②质量指标 ③风险更新 ④下周计划调整</td></tr>
+<tr><td>产出</td><td>《周报》+ 更新迭代管理文档版本记录</td></tr>
+</table>
+</div>
+
+<!-- ==================== 3. 沟通通道 ==================== -->
+<h2>3. 沟通通道</h2>
+<table>
+<tr><th>场景</th><th>通道</th><th>时效</th></tr>
+<tr><td>日常沟通</td><td>项目群聊（飞书/微信）</td><td>即时</td></tr>
+<tr><td>文档协作</td><td>共享文档（飞书文档/腾讯文档）</td><td>实时同步</td></tr>
+<tr><td>代码审查</td><td>Git Pull Request</td><td>提交后 4 小时内</td></tr>
+<tr><td>缺陷报告</td><td>测试报告（HTML 文档）</td><td>发现后立即提交 PM</td></tr>
+<tr><td>需求变更</td><td>变更申请单 → 迭代管理文档</td><td>书面，24 小时内评估</td></tr>
+<tr><td>紧急问题</td><td>电话/即时通讯 → 紧急会议</td><td>30 分钟内响应</td></tr>
+<tr><td>老板汇报</td><td>阶段评审会 + 周报</td><td>按节点</td></tr>
+</table>
+
+<!-- ==================== 4. 跨模块问题处理 ==================== -->
+<h2>4. 跨模块问题处理（越界管控）</h2>
+<div class="escalation">
+<p><strong>原则：</strong>任何角色发现其他模块问题，<strong>不可越界修改</strong>，须提交 PM 统一调度。</p>
+<ol>
+  <li>发现者提交《问题报告》给 PM（描述问题+影响+建议）</li>
+  <li>PM 评估后指派对应负责人处理</li>
+  <li>负责人处理后反馈 PM 确认</li>
+  <li>PM 更新迭代管理文档待办状态</li>
+</ol>
+<p><strong>示例：</strong>测试发现前端显示的数据格式不对 → 不直接找后端改 → 提交 PM → PM 判断是后端返回格式问题 → 指派后端修复。</p>
+</div>
+
+<!-- ==================== 5. 文档管理 ==================== -->
+<h2>5. 文档管理规范</h2>
+<table>
+<tr><th>文档</th><th>编号</th><th>负责人</th><th>版本</th></tr>
+<tr><td>迭代管理文档</td><td>PET-PM-001</td><td>PM</td><td>V0.1</td></tr>
+<tr><td>协作机制说明</td><td>PET-PM-002</td><td>PM</td><td>V1.0</td></tr>
+<tr><td>SRS 基线版</td><td>PET-SRS-001</td><td>PM</td><td>V1.0</td></tr>
+<tr><td>系统设计文档</td><td>PET-DES-001</td><td>PM+后端</td><td>V1.0</td></tr>
+<tr><td>测试报告</td><td>PET-TEST-001</td><td>测试</td><td>V1.0</td></tr>
+<tr><td>部署与用户手册</td><td>PET-OPS-001</td><td>PM+后端</td><td>V1.0</td></tr>
+<tr><td>接口文档</td><td>PET-API-001</td><td>后端</td><td>待产出</td></tr>
+</table>
+<p><strong>版本规则：</strong>主版本号（V1/V2）= 重大变更；次版本号（V1.0/V1.1）= 小修改；每版本保存快照至 <code>docs/archive/</code> 支持回滚。</p>
+
+<!-- ==================== 6. 迭代节奏 ==================== -->
+<h2>6. 迭代节奏（Iter-01）</h2>
+<table>
+<tr><th>阶段</th><th>产出</th><th>负责人</th><th>评审节点</th></tr>
+<tr><td>① 需求梳理</td><td>需求清单 + SRS 基线版</td><td>PM</td><td>✅ 老板已确认</td></tr>
+<tr><td>② 协作机制</td><td>协作机制说明</td><td>PM</td><td>⏳ 进行中</td></tr>
+<tr><td>③ 接口规范统一</td><td>统一返回格式 + 接口文档</td><td>后端</td><td>待评审</td></tr>
+<tr><td>④ UI 视觉优化</td><td>像素风走查 + 素材替换</td><td>前端</td><td>待评审</td></tr>
+<tr><td>⑤ 打包</td><td>Windows .exe 安装包</td><td>前端</td><td>待评审</td></tr>
+<tr><td>⑥ 回归测试</td><td>回归测试报告</td><td>测试</td><td>待评审</td></tr>
+<tr><td>⑦ 基线发布</td><td>全部文档定稿 + 安装包</td><td>PM</td><td>待老板审批</td></tr>
+</table>
+
+</body>
+</html>

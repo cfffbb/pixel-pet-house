@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pet — SRS 软件需求规格说明书（基线版 V1.0）</title>
+<style>
+  :root {
+    --bg: #fdf6e3; --fg: #3a3226; --accent: #d48142; --border: #d9c6a9;
+    --code-bg: #f5ede0; --table-head: #ffe9c9; --table-alt: #faf3e6;
+    --p0: #d1453b; --p1: #e8a33d; --p2: #4169e1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.8;
+    max-width: 960px; margin: 0 auto; padding: 40px 30px;
+  }
+  h1 { font-size: 24px; text-align: center; margin-bottom: 6px; color: #6b4f3a; }
+  h2 { font-size: 20px; margin: 30px 0 10px; padding-bottom: 6px; border-bottom: 2px solid var(--accent); color: #6b4f3a; }
+  h3 { font-size: 16px; margin: 18px 0 8px; color: #8a6342; }
+  h4 { font-size: 14px; margin: 12px 0 6px; color: #8a6342; }
+  p { margin: 6px 0; font-size: 14px; }
+  ul, ol { margin: 6px 0 6px 22px; font-size: 14px; }
+  li { margin: 3px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13px; }
+  th, td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: var(--table-head); }
+  tr:nth-child(even) { background: var(--table-alt); }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .meta { text-align: center; color: #9a8a75; font-size: 13px; margin-bottom: 24px; }
+  .req { background: #fffaf0; border-left: 4px solid var(--accent); padding: 8px 14px; margin: 6px 0; border-radius: 0 6px 6px 0; font-size: 13px; }
+  .req-id { font-weight: bold; color: var(--accent); }
+  .p0 { color: var(--p0); font-weight: bold; }
+  .p1 { color: var(--p1); font-weight: bold; }
+  .p2 { color: var(--p2); font-weight: bold; }
+  .baseline-banner { background: #e8f4e8; border: 2px solid #2e8b57; border-radius: 8px; padding: 10px 16px; margin: 12px 0; text-align: center; font-size: 14px; }
+  @media print { body { max-width: none; } }
+</style>
+</head>
+<body>
+
+<h1>SRS 软件需求规格说明书（基线版）</h1>
+<p class="meta">
+  文档编号：PET-SRS-001 &nbsp;|&nbsp; 版本：V1.0（基线） &nbsp;|&nbsp; 日期：2026-08-17<br>
+  编写人：PM &nbsp;|&nbsp; 审批人：老板 &nbsp;|&nbsp; 迭代号：Iter-01<br>
+  关联文档：PET-PM-001（迭代管理文档）、PET-DES-001（系统设计文档）
+</p>
+
+<div class="baseline-banner">
+  ✅ <strong>基线声明</strong>：本文档仅覆盖<strong>当前已实现功能</strong>，不提前设计未做功能。<br>
+  任何新增需求须走变更流程（书面申请 → 评估 → 老板审批 → 更新本文档版本号）。
+</div>
+
+<!-- ==================== 1. 引言 ==================== -->
+<h2>1. 引言</h2>
+
+<h3>1.1 编写目的</h3>
+<p>定义 Pet（AI 桌面宠物）系统当前基线版本的功能与非功能需求，作为开发、测试、验收的依据。本文档与代码同步，版本号跟随迭代更新。</p>
+
+<h3>1.2 项目背景</h3>
+<p>将「桌面电子宠物」与「学习陪伴工具」结合：宠物在桌面上陪伴用户，通过日程管理、番茄钟、桌面整理等功能帮助养成良好习惯。宠物会饥饿、生病、死亡，也会因陪伴而开心——情感连接让工具不再冷冰冰。</p>
+
+<h3>1.3 系统范围</h3>
+<p>Electron 桌面应用（Vue 3 + Electron）+ Spring Boot REST API + MySQL。已实现 13 大功能模块、23 个 Controller、16 个 Vue 面板、26 张数据库表。</p>
+
+<h3>1.4 术语</h3>
+<table>
+<tr><th>术语</th><th>说明</th></tr>
+<tr><td>JWT</td><td>用户身份认证令牌，7 天过期</td></tr>
+<tr><td>懒计算</td><td>饥饿度不实时轮询，访问时按时间差一次性结算</td></tr>
+<tr><td>抽蛋</td><td>随机获得宠物，稀有度 70%/25%/5%</td></tr>
+<tr><td>反思答题</td><td>宠物死亡后需答 2 道开放题（每题≥10字）才能重新抽蛋</td></tr>
+</table>
+
+<!-- ==================== 2. 总体描述 ==================== -->
+<h2>2. 总体描述</h2>
+
+<h3>2.1 产品概述</h3>
+<p>用户安装 Electron 应用后注册/登录，抽取一只像素风宠物。宠物以悬浮窗常驻桌面，陪伴学习工作。通过主控窗口管理日程、开启番茄钟、整理桌面、与好友互动、与 AI 聊天。宠物会因饥饿而病危甚至死亡，死亡后需反思答题才能重新领养。</p>
+
+<h3>2.2 用户角色</h3>
+<table>
+<tr><th>角色</th><th>权限</th><th>获取方式</th></tr>
+<tr><td>普通用户</td><td>宠物养成 + 学习工具 + 社交 + AI 对话</td><td>注册</td></tr>
+<tr><td>管理员</td><td>普通用户全部权限 + 用户/商品/模式管理 + 举报审核</td><td>首个注册用户自动成为管理员</td></tr>
+</table>
+
+<h3>2.3 约束</h3>
+<ul>
+  <li>操作系统：Windows 10/11（64 位）</li>
+  <li>运行环境：Java 21+、MySQL 8+、Node.js 18+</li>
+  <li>AI 对话需用户自配 API Key（14 家服务商可选）</li>
+  <li>邮箱验证需用户自配 SMTP 授权码</li>
+  <li>不允许 AI 生成图片素材，仅允许联网搜索现成素材库</li>
+  <li>最终产品需打包为可安装软件（electron-builder）</li>
+</ul>
+
+<!-- ==================== 3. 需求追溯矩阵 ==================== -->
+<h2>3. 需求追溯矩阵</h2>
+<p>每条需求编号对应 SRS 章节号 + 迭代管理文档中的序号，确保需求→文档→代码→测试可追溯。</p>
+<table>
+<tr><th>需求编号</th><th>需求名称</th><th>优先级</th><th>SRS章节</th><th>迭代清单序号</th><th>实现状态</th><th>单测覆盖</th></tr>
+<tr><td>REQ-AUTH</td><td>用户认证</td><td class="p0">P0</td><td>3.1</td><td>1</td><td>✅ 已实现</td><td>JWT 3例</td></tr>
+<tr><td>REQ-PET</td><td>宠物养成</td><td class="p0">P0</td><td>3.2</td><td>2,3</td><td>✅ 已实现</td><td>PetService 20例</td></tr>
+<tr><td>REQ-SHOP</td><td>商店与喂食</td><td class="p0">P0</td><td>3.3</td><td>4</td><td>✅ 已实现</td><td>—</td></tr>
+<tr><td>REQ-DEATH</td><td>死亡与反思</td><td class="p1">P1</td><td>3.4</td><td>14</td><td>✅ 已实现</td><td>—</td></tr>
+<tr><td>REQ-BREED</td><td>配种与繁殖</td><td class="p1">P1</td><td>3.5</td><td>8,9</td><td>✅ 已实现</td><td>—</td></tr>
+<tr><td>REQ-SCHED</td><td>日程管理</td><td class="p0">P0</td><td>3.6</td><td>5</td><td>✅ 已实现</td><td>—</td></tr>
+<tr><td>REQ-POMO</td><td>番茄钟</td><td class="p0">P0</td><td>3.7</td><td>6</td><td>✅ 已实现</td><td>PomodoroService 5例</td></tr>
+<tr><td>REQ-SOCIAL</td><td>社交互动</td><td class="p1">P1</td><td>3.8</td><td>10,18</td><td>✅ 已实现</td><td>—</td></tr>
+<tr><td>REQ-CHAT</td><td>AI 对话</td><td class="p1">P1</td><td>3.9</td><td>11</td><td>✅ 已实现</td><td>AES 2例</td></tr>
+<tr><td>REQ-PHOTO</td><td>拍照相册</td><td class="p1">P1</td><td>3.10</td><td>12</td><td>✅ 已实现</td><td>—</td></tr>
+<tr><td>REQ-DESK</td><td>桌面整理</td><td class="p1">P1</td><td>3.11</td><td>13</td><td>✅ 已实现</td><td>—</td></tr>
+<tr><td>REQ-FLOAT</td><td>悬浮宠物</td><td class="p0">P0</td><td>3.12</td><td>7,17</td><td>✅ 已实现</td><td>—</td></tr>
+<tr><td>REQ-MON</td><td>应用感知</td><td class="p2">P2</td><td>3.13</td><td>16</td><td>✅ 已实现</td><td>—</td></tr>
+<tr><td>REQ-ADMIN</td><td>管理员后台</td><td class="p1">P1</td><td>3.14</td><td>15</td><td>✅ 已实现</td><td>—</td></tr>
+<tr><td>REQ-SET</td><td>用户设置</td><td class="p1">P1</td><td>3.15</td><td>—</td><td>✅ 已实现</td><td>—</td></tr>
+</table>
+
+<!-- ==================== 4. 功能需求 ==================== -->
+<h2>4. 功能需求</h2>
+<p>以下仅描述<strong>已实现</strong>功能的行为规约。需求编号格式：REQ-模块-序号。</p>
+
+<h3>4.1 用户认证（REQ-AUTH）<span class="p0">P0</span></h3>
+<div class="req"><span class="req-id">REQ-AUTH-01</span> 注册：用户名+密码+邮箱 → 发送 6 位验证码（10 分钟过期）→ 输入验证码+密保问答 → 注册成功。<strong>首用户自动 ADMIN。</strong>密码 bcrypt 哈希。</div>
+<div class="req"><span class="req-id">REQ-AUTH-02</span> 登录：用户名+密码 → 返回 JWT（7 天过期），前端存 localStorage 并同步 Electron 主进程。</div>
+<div class="req"><span class="req-id">REQ-AUTH-03</span> 找回密码：密保问题验证 → 重置密码。</div>
+
+<h3>4.2 宠物养成（REQ-PET）<span class="p0">P0</span></h3>
+<div class="req"><span class="req-id">REQ-PET-01</span> 抽蛋：一生一次；稀有度 70% NORMAL / 25% RARE / 5% LEGEND；随机性别（50/50）、性格（5 种）、亚种。管理员可指定种类。新宠物送 10 条小鱼干。</div>
+<div class="req"><span class="req-id">REQ-PET-02</span> 状态推进（懒计算）：饥饿度按 <code>100 / (基准天数×24×性格系数)</code> 下降，保底≥2 天。降到 0→病危；病危 24h 未喂食→死亡+立墓碑。</div>
+<div class="req"><span class="req-id">REQ-PET-03</span> 性格系数：高冷×0.8 / 粘人×1.1 / 贪吃×1.5 / 活泼·傲娇×1.0。</div>
+<div class="req"><span class="req-id">REQ-PET-04</span> 成长阶段：幼年(&lt;1天)→少年(&lt;3天)→成年(&lt;60天)→老年(≥60天)。出生≥3 天成熟（可上架配种）。</div>
+<div class="req"><span class="req-id">REQ-PET-05</span> 玩耍：10 种模式（抚摸/跑步/学习/玩球/散步/听音乐/跳舞/捉迷藏/晒太阳/扑蝶），影响心情/饥饿/经验。每天最多 5 次。</div>
+<div class="req"><span class="req-id">REQ-PET-06</span> 每日行为事件：30% 概率，暖心+5 或破坏-5 心情，每天最多 1 次。</div>
+<div class="req"><span class="req-id">REQ-PET-07</span> 改名：名字只能起一次，不允许更改（总抛异常）。</div>
+
+<h3>4.3 商店与喂食（REQ-SHOP）<span class="p0">P0</span></h3>
+<div class="req"><span class="req-id">REQ-SHOP-01</span> 商店：FOOD/TOY 两类物品，可按宠物种类过滤、等级锁定。管理员可新增物品。</div>
+<div class="req"><span class="req-id">REQ-SHOP-02</span> 购买：扣游戏币；管理员无限币。</div>
+<div class="req"><span class="req-id">REQ-SHOP-03</span> 喂食：消耗背包食物，恢复饥饿度+心情；病危状态喂食可救回。</div>
+
+<h3>4.4 死亡与反思（REQ-DEATH）<span class="p1">P1</span></h3>
+<div class="req"><span class="req-id">REQ-DEATH-01</span> 墓碑：宠物死亡后自动创建（名字/种类/性格/寿命天数）。</div>
+<div class="req"><span class="req-id">REQ-DEATH-02</span> 反思答题：2 道开放式题（每题≥10 字），通过后才能重新抽蛋。</div>
+
+<h3>4.5 配种与繁殖（REQ-BREED）<span class="p1">P1</span></h3>
+<div class="req"><span class="req-id">REQ-BREED-01</span> 上架：雄性+活着+出生≥3 天+非冷却。管理员可无视成熟要求。</div>
+<div class="req"><span class="req-id">REQ-BREED-02</span> 配种：发起方付 10 币→对方接受后双方各扣 10 币→雄性 3 天冷却。</div>
+<div class="req"><span class="req-id">REQ-BREED-03</span> 产崽：雌性怀孕 3 天→每胎 3-5 只→10% 概率夭折。</div>
+<div class="req"><span class="req-id">REQ-BREED-04</span> 幼崽托管：5 币/天托管费→需反思答题才能领取→可赠送。</div>
+
+<h3>4.6 日程管理（REQ-SCHED）<span class="p0">P0</span></h3>
+<div class="req"><span class="req-id">REQ-SCHED-01</span> CRUD：创建/查看/修改/删除日程，支持标题/时间/优先级/标签/重复。</div>
+<div class="req"><span class="req-id">REQ-SCHED-02</span> 到期提醒：Electron 主进程每分钟轮询→系统通知。10% 概率被宠物卖萌替代。</div>
+<div class="req"><span class="req-id">REQ-SCHED-03</span> 统计：按标签/时间维度（饼图/柱状/时间分布）。</div>
+
+<h3>4.7 番茄钟（REQ-POMO）<span class="p0">P0</span></h3>
+<div class="req"><span class="req-id">REQ-POMO-01</span> 开始：自定义时长（默认 25 分钟，上限 480），需有活宠。</div>
+<div class="req"><span class="req-id">REQ-POMO-02</span> 暂停/恢复：每轮最多 2 次。</div>
+<div class="req"><span class="req-id">REQ-POMO-03</span> 完成：专注分钟×1 币。等级=累计分钟/1200，最高 100 级。</div>
+<div class="req"><span class="req-id">REQ-POMO-04</span> 放弃：0 币。悬浮窗显示倒计时，学习中静音。</div>
+
+<h3>4.8 社交互动（REQ-SOCIAL）<span class="p1">P1</span></h3>
+<div class="req"><span class="req-id">REQ-SOCIAL-01</span> 好友：搜索用户→发申请→对方收件箱接受/拒绝→双向好友。可删除（双向）。</div>
+<div class="req"><span class="req-id">REQ-SOCIAL-02</span> 收件箱：配种/赠送/好友申请+聊天。支持标记已读/接受/拒绝/删除对话。</div>
+<div class="req"><span class="req-id">REQ-SOCIAL-03</span> 拉黑：拉黑后对方无法发起任何申请。</div>
+<div class="req"><span class="req-id">REQ-SOCIAL-04</span> 举报：提交举报→管理员审核（封禁/驳回）。</div>
+
+<h3>4.9 AI 对话（REQ-CHAT）<span class="p1">P1</span></h3>
+<div class="req"><span class="req-id">REQ-CHAT-01</span> 14 家服务商（通义/DeepSeek/OpenAI/智谱/Kimi/硅基/星火/百度/混元/MiniMax/阶跃/Groq/Ollama/自定义），每家最多 1 个 Key，AES 加密存储。</div>
+<div class="req"><span class="req-id">REQ-CHAT-02</span> 文字对话：后端转发→AI 回复。保留最近 N 条记忆（管理员配置 N）。</div>
+<div class="req"><span class="req-id">REQ-CHAT-03</span> 语音对话：录音→转文字→AI 回复。</div>
+
+<h3>4.10 拍照相册（REQ-PHOTO）<span class="p1">P1</span></h3>
+<div class="req"><span class="req-id">REQ-PHOTO-01</span> 拍照：Electron 摄像头权限→拍照→存入当前宠物相册。</div>
+<div class="req"><span class="req-id">REQ-PHOTO-02</span> 相册：按宠物分组+搜索+删除。</div>
+
+<h3>4.11 桌面整理（REQ-DESK）<span class="p1">P1</span></h3>
+<div class="req"><span class="req-id">REQ-DESK-01</span> 分区规则：按扩展名匹配目标文件夹，首次自动建默认分区。可增删改。</div>
+<div class="req"><span class="req-id">REQ-DESK-02</span> 扫描预览→执行整理（移动文件）→可撤销。</div>
+
+<h3>4.12 悬浮宠物（REQ-FLOAT）<span class="p0">P0</span></h3>
+<div class="req"><span class="req-id">REQ-FLOAT-01</span> 透明置顶可拖拽窗口。点击弹出菜单（撒娇/喂食/玩耍/学习/测试/隐藏）。</div>
+<div class="req"><span class="req-id">REQ-FLOAT-02</span> 陪伴推送：一天 2-3 次随机文案，系统通知+气泡。学习中静音。</div>
+<div class="req"><span class="req-id">REQ-FLOAT-03</span> 宠物主动邀请：每 45-90 分钟随机，一天最多 3 次。</div>
+<div class="req"><span class="req-id">REQ-FLOAT-04</span> 右键投喂：自动选背包第一种食物。</div>
+<div class="req"><span class="req-id">REQ-FLOAT-05</span> 摄像头手势识别：搓手→宠物转圈（趣味功能，精度有限）。</div>
+
+<h3>4.13 应用感知（REQ-MON）<span class="p2">P2</span></h3>
+<div class="req"><span class="req-id">REQ-MON-01</span> 默认关闭。用户知情后手动开启（隐私红线）。</div>
+<div class="req"><span class="req-id">REQ-MON-02</span> 每 5 分钟采样前台进程名（不采集内容），40% 概率发陪伴通知。保留 7 天。</div>
+
+<h3>4.14 管理员后台（REQ-ADMIN）<span class="p1">P1</span></h3>
+<div class="req"><span class="req-id">REQ-ADMIN-01</span> 用户管理：分页/启用禁用/重置密码/删除（逻辑删除）。</div>
+<div class="req"><span class="req-id">REQ-ADMIN-02</span> 商品管理+玩耍模式 CRUD。</div>
+<div class="req"><span class="req-id">REQ-ADMIN-03</span> 举报审核：BLOCK/DISMISS。</div>
+<div class="req"><span class="req-id">REQ-ADMIN-04</span> 数据总览+对话记忆配置+管理员换宠（测试用）。</div>
+
+<h3>4.15 用户设置（REQ-SET）<span class="p1">P1</span></h3>
+<div class="req"><span class="req-id">REQ-SET-01</span> AI Key 管理（脱敏展示）。</div>
+<div class="req"><span class="req-id">REQ-SET-02</span> 配种授权开关（默认开）+应用感知开关（默认关）。</div>
+
+<!-- ==================== 5. 非功能需求 ==================== -->
+<h2>5. 非功能需求</h2>
+
+<h3>5.1 性能</h3>
+<table>
+<tr><th>指标</th><th>要求</th></tr>
+<tr><td>API 响应</td><td>95% 请求 &lt; 200ms（本地）</td></tr>
+<tr><td>Electron 内存</td><td>主+渲染进程 &lt; 300MB</td></tr>
+<tr><td>轮询频率</td><td>日程 1 次/分；陪伴 1 次/30 分；应用采样 1 次/5 分</td></tr>
+</table>
+
+<h3>5.2 安全</h3>
+<ul>
+  <li>密码：bcrypt 哈希，不可逆</li>
+  <li>认证：JWT 7 天过期</li>
+  <li>API Key：AES 加密存储，前端脱敏</li>
+  <li>SQL 防注入：MyBatis-Plus 参数化查询</li>
+  <li>XSS：Vue 默认转义，不使用 v-html 渲染用户输入</li>
+  <li>隐私红线：应用感知默认关，仅进程名，7 天清理</li>
+</ul>
+
+<h3>5.3 可用性</h3>
+<ul>
+  <li>UI 风格：8-bit 像素风，暖色调</li>
+  <li>图片渲染：像素图 pixelated，照片 auto</li>
+  <li>高 DPI：Electron 禁用硬件加速 + DPI 感知开关</li>
+</ul>
+
+<h3>5.4 可维护性</h3>
+<ul>
+  <li>测试：JUnit 5 + Mockito + H2，31 个单测通过</li>
+  <li>文档：SRS + 系统设计 + 测试报告 + 部署手册，版本管理可回滚</li>
+  <li>代码规范：Lombok + MyBatis-Plus + Vue 3 Composition API</li>
+</ul>
+
+<h3>5.5 兼容性</h3>
+<ul>
+  <li>Windows 10/11（64 位）</li>
+  <li>JDK 21+、MySQL 8+、Node.js 18+</li>
+</ul>
+
+<!-- ==================== 6. 接口需求 ==================== -->
+<h2>6. 接口需求</h2>
+<table>
+<tr><th>接口</th><th>协议</th><th>说明</th></tr>
+<tr><td>后端 API</td><td>HTTP/JSON</td><td>23 个 Controller，localhost:8080</td></tr>
+<tr><td>AI 服务商</td><td>HTTPS</td><td>14 家，后端代理转发</td></tr>
+<tr><td>SMTP 邮件</td><td>SMTP/SSL</td><td>发送注册验证码</td></tr>
+<tr><td>Electron IPC</td><td>ipcMain/ipcRenderer</td><td>主进程↔渲染进程通信</td></tr>
+</table>
+<p><strong>接口规范</strong>（本次迭代目标）：统一返回格式 <code>{"code":200,"msg":"操作成功","data":{}}</code>。详细 API 清单见《系统设计文档》第 3 章。</p>
+
+<!-- ==================== 7. 变更管理 ==================== -->
+<h2>7. 变更管理</h2>
+<table>
+<tr><th>步骤</th><th>责任人</th><th>产出</th></tr>
+<tr><td>1. 书面申请（描述变更内容+原因）</td><td>任何角色</td><td>变更申请单</td></tr>
+<tr><td>2. 评估影响（技术/进度/风险）</td><td>PM + 相关专家</td><td>评估意见</td></tr>
+<tr><td>3. 老板审批</td><td>老板</td><td>审批结果</td></tr>
+<tr><td>4. 同步文档+代码</td><td>对应负责人</td><td>更新后的文档/代码</td></tr>
+<tr><td>5. 更新版本号+变更记录</td><td>PM</td><td>迭代管理文档新增记录</td></tr>
+</table>
+
+<div class="baseline-banner" style="margin-top:20px;">
+  📌 本基线版 V1.0 经老板确认后冻结。后续变更须走第 7 章流程，版本号递增（V1.1/V1.2...）。
+</div>
+
+</body>
+</html>

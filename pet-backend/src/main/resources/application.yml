@@ -1,0 +1,62 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: pet-backend
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 12MB
+  mail:
+    # 注册邮箱验证码 —— 把下面 4 个值换成你自己的邮箱(QQ 邮箱示例):
+    #   1) host:QQ 用 smtp.qq.com;163 用 smtp.163.com;Outlook 用 smtp.office365.com
+    #   2) username:你的邮箱地址,如 12345@qq.com
+    #   3) password:邮箱「授权码」,不是登录密码!(QQ邮箱→设置→账户→开启SMTP→生成授权码)
+    #   4) from:发件人,一般和 username 一样
+    # 安全红线:授权码不要发到对话里,也不要提交 git
+    host: smtp.qq.com
+    port: 465
+    username: your-email@qq.com
+    password: <你的邮箱授权码>
+    from: your-email@qq.com
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+          connectiontimeout: 3000
+          timeout: 3000
+          writetimeout: 3000
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/pet_ai?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&zeroDateTimeBehavior=convertToNull
+    username: root
+    # 安全红线:数据库密码一律用占位符。
+    # 把 <你的密钥> 换成你自己本地的 MySQL 密码即可,不要发到对话里,也不要提交到 git。
+    password: <你的MySQL密码>
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+pet:
+  security:
+    # JWT 签名密钥(占位):换成你自己的随机长字符串,越长越安全,不要提交 git
+    jwt-secret: <你的JWT密钥-随机长字符串>
+    # JWT 有效期(天):M2 拍板 7 天
+    jwt-expire-days: 7
+    # API Key 加密密钥(占位):换成你自己的随机字符串,用于派生 16 字节 AES 密钥,不要提交 git
+    aes-key: <你的AES密钥-随机字符串>

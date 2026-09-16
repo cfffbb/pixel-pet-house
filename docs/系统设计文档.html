@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 宠物助手 — 系统设计文档</title>
+<style>
+  :root {
+    --bg: #fdf6e3; --fg: #3a3226; --accent: #d48142; --border: #d9c6a9;
+    --code-bg: #f5ede0; --table-head: #ffe9c9; --table-alt: #faf3e6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.8;
+    max-width: 960px; margin: 0 auto; padding: 40px 30px;
+  }
+  h1 { font-size: 26px; text-align: center; margin-bottom: 8px; color: #6b4f3a; }
+  h2 { font-size: 20px; margin: 32px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--accent); color: #6b4f3a; }
+  h3 { font-size: 16px; margin: 20px 0 8px; color: #8a6342; }
+  h4 { font-size: 14px; margin: 14px 0 6px; color: #8a6342; }
+  p { margin: 6px 0; font-size: 14px; }
+  ul, ol { margin: 6px 0 6px 22px; font-size: 14px; }
+  li { margin: 3px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13px; }
+  th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+  th { background: var(--table-head); }
+  tr:nth-child(even) { background: var(--table-alt); }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-size: 13px; }
+  .meta { text-align: center; color: #9a8a75; font-size: 13px; margin-bottom: 30px; }
+  .arch-svg { display: block; margin: 16px auto; max-width: 100%; }
+  .er-svg { display: block; margin: 16px auto; max-width: 100%; }
+  .method-get { color: #2e8b57; font-weight: bold; }
+  .method-post { color: #d48142; font-weight: bold; }
+  .method-put { color: #4169e1; font-weight: bold; }
+  .method-delete { color: #d1453b; font-weight: bold; }
+  @media print { body { max-width: none; } }
+</style>
+</head>
+<body>
+
+<h1>AI 宠物助手 — 系统设计文档</h1>
+<p class="meta">
+  文档版本：V1.0 &nbsp;|&nbsp; 编写日期：2026-08-17<br>
+  技术栈：Java 21 + Spring Boot 3 + MyBatis-Plus + Vue 3 + Electron + MySQL 8
+</p>
+
+<!-- ==================== 1. 系统架构 ==================== -->
+<h2>1. 系统架构</h2>
+
+<h3>1.1 架构总览</h3>
+<p>系统采用三层架构：Electron 桌面客户端（前端）+ Spring Boot REST API（后端）+ MySQL 数据库。Electron 主进程负责桌面级能力（悬浮窗、系统通知、文件操作、摄像头权限），Vue 渲染进程负责 UI 交互，后端提供全部业务逻辑。</p>
+
+<svg class="arch-svg" width="860" height="420" viewBox="0 0 860 420" xmlns="http://www.w3.org/2000/svg">
+  <!-- 桌面客户端层 -->
+  <rect x="20" y="20" width="820" height="170" rx="12" fill="#fffaf0" stroke="#d48142" stroke-width="2"/>
+  <text x="430" y="44" text-anchor="middle" font-size="15" font-weight="bold" fill="#6b4f3a">Electron 桌面客户端（Node.js 运行时）</text>
+
+  <!-- 主进程 -->
+  <rect x="40" y="60" width="240" height="115" rx="8" fill="#ffe9c9" stroke="#d9c6a9"/>
+  <text x="160" y="80" text-anchor="middle" font-size="13" font-weight="bold" fill="#8a6342">Electron 主进程</text>
+  <text x="160" y="100" text-anchor="middle" font-size="12" fill="#4a3f35">· 悬浮窗 / 系统托盘</text>
+  <text x="160" y="116" text-anchor="middle" font-size="12" fill="#4a3f35">· 系统通知推送</text>
+  <text x="160" y="132" text-anchor="middle" font-size="12" fill="#4a3f35">· 桌面文件整理</text>
+  <text x="160" y="148" text-anchor="middle" font-size="12" fill="#4a3f35">· 摄像头/权限管理</text>
+  <text x="160" y="164" text-anchor="middle" font-size="12" fill="#4a3f35">· 应用感知采样</text>
+
+  <!-- Vue 渲染进程 -->
+  <rect x="310" y="60" width="240" height="115" rx="8" fill="#e8f4e8" stroke="#7fbf7f"/>
+  <text x="430" y="80" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e6b2e">Vue 3 渲染进程</text>
+  <text x="430" y="100" text-anchor="middle" font-size="12" fill="#4a3f35">· 16 个功能面板</text>
+  <text x="430" y="116" text-anchor="middle" font-size="12" fill="#4a3f35">· Axios HTTP 拦截器</text>
+  <text x="430" y="132" text-anchor="middle" font-size="12" fill="#4a3f35">· 像素风 UI（8-bit）</text>
+  <text x="430" y="148" text-anchor="middle" font-size="12" fill="#4a3f35">· SVG 宠物图渲染</text>
+  <text x="430" y="164" text-anchor="middle" font-size="12" fill="#4a3f35">· 番茄钟计时器</text>
+
+  <!-- IPC -->
+  <rect x="580" y="60" width="240" height="115" rx="8" fill="#f0e6f6" stroke="#9b7bbf"/>
+  <text x="700" y="80" text-anchor="middle" font-size="13" font-weight="bold" fill="#6b4f8a">IPC 通信桥</text>
+  <text x="700" y="100" text-anchor="middle" font-size="12" fill="#4a3f35">· auth:set-token</text>
+  <text x="700" y="116" text-anchor="middle" font-size="12" fill="#4a3f35">· desktop:scan/organize</text>
+  <text x="700" y="132" text-anchor="middle" font-size="12" fill="#4a3f35">· pet:feed/spin/bubble</text>
+  <text x="700" y="148" text-anchor="middle" font-size="12" fill="#4a3f35">· pomo:sync</text>
+  <text x="700" y="164" text-anchor="middle" font-size="12" fill="#4a3f35">· window:show/hide</text>
+
+  <!-- 箭头：客户端 → 后端 -->
+  <line x1="430" y1="190" x2="430" y2="230" stroke="#d48142" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="450" y="214" font-size="12" fill="#8a6342">HTTP/JSON (localhost:8080)</text>
+
+  <!-- 后端层 -->
+  <rect x="20" y="230" width="820" height="120" rx="12" fill="#fffaf0" stroke="#d48142" stroke-width="2"/>
+  <text x="430" y="254" text-anchor="middle" font-size="15" font-weight="bold" fill="#6b4f3a">Spring Boot 后端（Java 21）</text>
+
+  <rect x="40" y="266" width="180" height="70" rx="8" fill="#ffe9c9" stroke="#d9c6a9"/>
+  <text x="130" y="286" text-anchor="middle" font-size="13" font-weight="bold" fill="#8a6342">Controller 层</text>
+  <text x="130" y="304" text-anchor="middle" font-size="11" fill="#4a3f35">23 个 Controller</text>
+  <text x="130" y="320" text-anchor="middle" font-size="11" fill="#4a3f35">JWT 认证拦截器</text>
+
+  <rect x="250" y="266" width="180" height="70" rx="8" fill="#e8f4e8" stroke="#7fbf7f"/>
+  <text x="340" y="286" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e6b2e">Service 层</text>
+  <text x="340" y="304" text-anchor="middle" font-size="11" fill="#4a3f35">核心业务逻辑</text>
+  <text x="340" y="320" text-anchor="middle" font-size="11" fill="#4a3f35">状态推进/抽蛋/配种</text>
+
+  <rect x="460" y="266" width="180" height="70" rx="8" fill="#f0e6f6" stroke="#9b7bbf"/>
+  <text x="550" y="286" text-anchor="middle" font-size="13" font-weight="bold" fill="#6b4f8a">Mapper 层</text>
+  <text x="550" y="304" text-anchor="middle" font-size="11" fill="#4a3f35">MyBatis-Plus</text>
+  <text x="550" y="320" text-anchor="middle" font-size="11" fill="#4a3f35">26 张表 CRUD</text>
+
+  <rect x="670" y="266" width="150" height="70" rx="8" fill="#fde8e8" stroke="#d1453b"/>
+  <text x="745" y="286" text-anchor="middle" font-size="13" font-weight="bold" fill="#8a2a2a">安全/工具</text>
+  <text x="745" y="304" text-anchor="middle" font-size="11" fill="#4a3f35">JwtUtil / AES</text>
+  <text x="745" y="320" text-anchor="middle" font-size="11" fill="#4a3f35">SMTP 邮件</text>
+
+  <!-- 箭头：后端 → 数据库 -->
+  <line x1="430" y1="350" x2="430" y2="385" stroke="#d48142" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 数据库层 -->
+  <rect x="280" y="385" width="300" height="30" rx="8" fill="#e0e8f0" stroke="#4169e1" stroke-width="2"/>
+  <text x="430" y="405" text-anchor="middle" font-size="14" font-weight="bold" fill="#2a4a8a">MySQL 8.0（26 张表）</text>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#d48142"/>
+    </marker>
+  </defs>
+</svg>
+
+<h3>1.2 技术选型</h3>
+<table>
+<tr><th>层</th><th>技术</th><th>选型理由</th></tr>
+<tr><td>桌面壳</td><td>Electron</td><td>跨平台、支持透明悬浮窗、系统通知、文件操作</td></tr>
+<tr><td>前端框架</td><td>Vue 3 + Vite</td><td>Composition API 简洁、Vite 热更新快</td></tr>
+<tr><td>UI 风格</td><td>自定义 CSS（8-bit 像素风）</td><td>不依赖 UI 库，完全自控渲染效果</td></tr>
+<tr><td>后端框架</td><td>Spring Boot 3</td><td>Java 生态成熟、自动配置、内嵌 Tomcat</td></tr>
+<tr><td>ORM</td><td>MyBatis-Plus</td><td>LambdaQueryWrapper 类型安全、自动 CRUD</td></tr>
+<tr><td>数据库</td><td>MySQL 8</td><td>关系型存储、事务支持、逻辑删除</td></tr>
+<tr><td>认证</td><td>JWT (jjwt 0.12)</td><td>无状态、前后端分离友好</td></tr>
+<tr><td>加密</td><td>AES (Hutool)</td><td>API Key 对称加密存储</td></tr>
+<tr><td>工具库</td><td>Hutool / Lombok</td><td>减少样板代码、RandomUtil/JSONUtil 常用</td></tr>
+<tr><td>测试</td><td>JUnit 5 + Mockito + H2</td><td>标准 Java 测试栈、内存数据库不依赖 MySQL</td></tr>
+</table>
+
+<h3>1.3 目录结构</h3>
+<pre style="font-size:12px; background:#f5ede0; padding:12px; border-radius:8px; overflow-x:auto;">
+pet/
+├── pet-backend/                    # 后端 Spring Boot
+│   ├── src/main/java/com/pet/
+│   │   ├── controller/             # 23 个 Controller
+│   │   ├── service/                # 业务逻辑层
+│   │   ├── entity/                 # 实体类（与表映射）
+│   │   ├── mapper/                 # MyBatis-Plus Mapper 接口
+│   │   ├── security/               # JwtUtil / ApiKeyCipher / 拦截器
+│   │   ├── common/                 # 常量 / 异常 / 配置
+│   │   └── PetApplication.java     # 启动类
+│   ├── src/main/resources/
+│   │   ├── application.yml         # 配置（含 SMTP 模板）
+│   │   └── sql/                    # 建表脚本 + M3~M13 迁移
+│   └── src/test/                   # 单元测试（31 个）
+│       ├── java/com/pet/
+│       └── resources/application-test.yml
+├── pet-client/                     # 前端 Electron + Vue 3
+│   ├── electron/
+│   │   ├── main.js                 # 主进程（悬浮窗/通知/桌面整理）
+│   │   └── preload.js              # IPC 桥
+│   ├── src/
+│   │   ├── api/http.js             # Axios 拦截器
+│   │   ├── components/             # 16 个 Vue 面板
+│   │   ├── pixelPet.js             # 像素宠物帧动画
+│   │   └── style.css               # 全局像素风样式
+│   └── package.json
+└── docs/                           # 项目文档
+</pre>
+
+<!-- ==================== 2. 数据库设计 ==================== -->
+<h2>2. 数据库设计（ER 图）</h2>
+<p>系统共 26 张表，下方 ER 图展示核心表的关系（省略字段细节，仅画主键和外键关联）。</p>
+
+<svg class="er-svg" width="860" height="680" viewBox="0 0 860 680" xmlns="http://www.w3.org/2000/svg">
+  <!-- sys_user -->
+  <rect x="330" y="10" width="200" height="60" rx="6" fill="#ffe9c9" stroke="#d48142" stroke-width="2"/>
+  <text x="430" y="30" text-anchor="middle" font-size="13" font-weight="bold" fill="#6b4f3a">sys_user</text>
+  <text x="430" y="48" text-anchor="middle" font-size="11" fill="#4a3f35">id, username, password(bcrypt)</text>
+  <text x="430" y="62" text-anchor="middle" font-size="11" fill="#4a3f35">email, role, security_q/a</text>
+
+  <!-- pet -->
+  <rect x="60" y="130" width="200" height="70" rx="6" fill="#e8f4e8" stroke="#7fbf7f" stroke-width="2"/>
+  <text x="160" y="150" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e6b2e">pet</text>
+  <text x="160" y="168" text-anchor="middle" font-size="11" fill="#4a3f35">id, user_id(FK), pet_type_id(FK)</text>
+  <text x="160" y="182" text-anchor="middle" font-size="11" fill="#4a3f35">hunger, mood, coins, status</text>
+  <text x="160" y="196" text-anchor="middle" font-size="11" fill="#4a3f35">hatched_at, listed</text>
+
+  <!-- pet_type -->
+  <rect x="60" y="260" width="200" height="50" rx="6" fill="#f0e6f6" stroke="#9b7bbf" stroke-width="2"/>
+  <text x="160" y="280" text-anchor="middle" font-size="13" font-weight="bold" fill="#6b4f8a">pet_type</text>
+  <text x="160" y="298" text-anchor="middle" font-size="11" fill="#4a3f35">id, type_code, rarity</text>
+
+  <!-- pet_gravestone -->
+  <rect x="60" y="340" width="200" height="50" rx="6" fill="#fde8e8" stroke="#d1453b" stroke-width="2"/>
+  <text x="160" y="360" text-anchor="middle" font-size="13" font-weight="bold" fill="#8a2a2a">pet_gravestone</text>
+  <text x="160" y="378" text-anchor="middle" font-size="11" fill="#4a3f35">id, user_id, pet_id(FK)</text>
+
+  <!-- pet_hatchling -->
+  <rect x="60" y="420" width="200" height="50" rx="6" fill="#fff3cd" stroke="#e8a33d" stroke-width="2"/>
+  <text x="160" y="440" text-anchor="middle" font-size="13" font-weight="bold" fill="#8a6342">pet_hatchling</text>
+  <text x="160" y="458" text-anchor="middle" font-size="11" fill="#4a3f35">id, owner_id, parent_pet_id</text>
+
+  <!-- breeding_record -->
+  <rect x="330" y="130" width="200" height="60" rx="6" fill="#e8f4e8" stroke="#7fbf7f" stroke-width="2"/>
+  <text x="430" y="150" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e6b2e">breeding_record</text>
+  <text x="430" y="168" text-anchor="middle" font-size="11" fill="#4a3f35">id, requester_id, target_id</text>
+  <text x="430" y="182" text-anchor="middle" font-size="11" fill="#4a3f35">male_pet_id, female_pet_id</text>
+  <text x="430" y="196" text-anchor="middle" font-size="11" fill="#4a3f35">status, born_at</text>
+
+  <!-- schedule -->
+  <rect x="330" y="260" width="200" height="50" rx="6" fill="#e0e8f0" stroke="#4169e1" stroke-width="2"/>
+  <text x="430" y="280" text-anchor="middle" font-size="13" font-weight="bold" fill="#2a4a8a">schedule</text>
+  <text x="430" y="298" text-anchor="middle" font-size="11" fill="#4a3f35">id, user_id(FK), title, tag</text>
+
+  <!-- pomodoro_record -->
+  <rect x="330" y="340" width="200" height="50" rx="6" fill="#e0e8f0" stroke="#4169e1" stroke-width="2"/>
+  <text x="430" y="360" text-anchor="middle" font-size="13" font-weight="bold" fill="#2a4a8a">pomodoro_record</text>
+  <text x="430" y="378" text-anchor="middle" font-size="11" fill="#4a3f35">id, user_id(FK), pet_id(FK)</text>
+
+  <!-- inbox_message -->
+  <rect x="600" y="130" width="200" height="60" rx="6" fill="#e8f4e8" stroke="#7fbf7f" stroke-width="2"/>
+  <text x="700" y="150" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e6b2e">inbox_message</text>
+  <text x="700" y="168" text-anchor="middle" font-size="11" fill="#4a3f35">id, from_user_id, to_user_id</text>
+  <text x="700" y="182" text-anchor="middle" font-size="11" fill="#4a3f35">type, status, content</text>
+
+  <!-- friend -->
+  <rect x="600" y="260" width="200" height="50" rx="6" fill="#e0e8f0" stroke="#4169e1" stroke-width="2"/>
+  <text x="700" y="280" text-anchor="middle" font-size="13" font-weight="bold" fill="#2a4a8a">friend</text>
+  <text x="700" y="298" text-anchor="middle" font-size="11" fill="#4a3f35">user_id, friend_id (双向)</text>
+
+  <!-- chat_message -->
+  <rect x="600" y="340" width="200" height="50" rx="6" fill="#e0e8f0" stroke="#4169e1" stroke-width="2"/>
+  <text x="700" y="360" text-anchor="middle" font-size="13" font-weight="bold" fill="#2a4a8a">chat_message</text>
+  <text x="700" y="378" text-anchor="middle" font-size="11" fill="#4a3f35">id, user_id(FK), role, content</text>
+
+  <!-- shop_item -->
+  <rect x="60" y="510" width="200" height="50" rx="6" fill="#f0e6f6" stroke="#9b7bbf" stroke-width="2"/>
+  <text x="160" y="530" text-anchor="middle" font-size="13" font-weight="bold" fill="#6b4f8a">shop_item</text>
+  <text x="160" y="548" text-anchor="middle" font-size="11" fill="#4a3f35">id, item_code, type, price</text>
+
+  <!-- pet_inventory -->
+  <rect x="330" y="510" width="200" height="50" rx="6" fill="#e8f4e8" stroke="#7fbf7f" stroke-width="2"/>
+  <text x="430" y="530" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e6b2e">pet_inventory</text>
+  <text x="430" y="548" text-anchor="middle" font-size="11" fill="#4a3f35">pet_id(FK), item_id(FK), qty</text>
+
+  <!-- photo_album -->
+  <rect x="600" y="510" width="200" height="50" rx="6" fill="#fff3cd" stroke="#e8a33d" stroke-width="2"/>
+  <text x="700" y="530" text-anchor="middle" font-size="13" font-weight="bold" fill="#8a6342">photo_album</text>
+  <text x="700" y="548" text-anchor="middle" font-size="11" fill="#4a3f35">id, pet_id(FK), path</text>
+
+  <!-- 关系线 -->
+  <!-- sys_user → pet -->
+  <line x1="380" y1="70" x2="160" y2="130" stroke="#888" stroke-width="1.5"/>
+  <text x="250" y="100" font-size="10" fill="#888">1:N</text>
+  <!-- sys_user → breeding_record -->
+  <line x1="430" y1="70" x2="430" y2="130" stroke="#888" stroke-width="1.5"/>
+  <text x="440" y="100" font-size="10" fill="#888">1:N</text>
+  <!-- sys_user → inbox_message -->
+  <line x1="480" y1="70" x2="700" y2="130" stroke="#888" stroke-width="1.5"/>
+  <text x="610" y="100" font-size="10" fill="#888">1:N</text>
+  <!-- pet → pet_type -->
+  <line x1="160" y1="200" x2="160" y2="260" stroke="#888" stroke-width="1.5"/>
+  <text x="170" y="230" font-size="10" fill="#888">N:1</text>
+  <!-- pet → pet_gravestone -->
+  <line x1="160" y1="200" x2="160" y2="340" stroke="#888" stroke-width="1.5" stroke-dasharray="4"/>
+  <text x="170" y="280" font-size="10" fill="#888">1:1</text>
+  <!-- pet → pet_hatchling -->
+  <line x1="160" y1="390" x2="160" y2="420" stroke="#888" stroke-width="1.5"/>
+  <text x="170" y="408" font-size="10" fill="#888">1:N</text>
+  <!-- sys_user → schedule -->
+  <line x1="430" y1="70" x2="430" y2="260" stroke="#888" stroke-width="1.5" stroke-dasharray="4"/>
+  <text x="440" y="170" font-size="10" fill="#888">1:N</text>
+  <!-- sys_user → pomodoro_record -->
+  <line x1="430" y1="310" x2="430" y2="340" stroke="#888" stroke-width="1.5"/>
+  <!-- pet → pet_inventory -->
+  <line x1="160" y1="200" x2="430" y2="510" stroke="#888" stroke-width="1" stroke-dasharray="3"/>
+  <!-- shop_item → pet_inventory -->
+  <line x1="160" y1="510" x2="330" y2="535" stroke="#888" stroke-width="1.5"/>
+  <text x="230" y="518" font-size="10" fill="#888">1:N</text>
+  <!-- sys_user → chat_message -->
+  <line x1="530" y1="70" x2="700" y2="340" stroke="#888" stroke-width="1" stroke-dasharray="3"/>
+</svg>
+
+<h3>2.1 核心表结构</h3>
+<p>以下列出最核心的 5 张表的结构（完整 26 张表见 <code>sql/schema.sql</code> 及 M3~M13 迁移脚本）。</p>
+
+<h4>sys_user（用户表）</h4>
+<table>
+<tr><th>字段</th><th>类型</th><th>说明</th></tr>
+<tr><td>id</td><td>BIGINT AUTO_INCREMENT</td><td>主键</td></tr>
+<tr><td>username</td><td>VARCHAR(50)</td><td>用户名（唯一）</td></tr>
+<tr><td>password</td><td>VARCHAR(100)</td><td>bcrypt 哈希</td></tr>
+<tr><td>email</td><td>VARCHAR(100)</td><td>邮箱</td></tr>
+<tr><td>role</td><td>VARCHAR(20)</td><td>USER / ADMIN</td></tr>
+<tr><td>security_question</td><td>VARCHAR(200)</td><td>密保问题</td></tr>
+<tr><td>security_answer</td><td>VARCHAR(200)</td><td>密保答案</td></tr>
+<tr><td>status</td><td>INT</td><td>1 启用 / 0 禁用</td></tr>
+<tr><td>deleted</td><td>INT</td><td>逻辑删除（@TableLogic）</td></tr>
+</table>
+
+<h4>pet（宠物表）</h4>
+<table>
+<tr><th>字段</th><th>类型</th><th>说明</th></tr>
+<tr><td>id</td><td>BIGINT AUTO_INCREMENT</td><td>主键</td></tr>
+<tr><td>user_id</td><td>BIGINT</td><td>归属用户（FK → sys_user）</td></tr>
+<tr><td>pet_type_id</td><td>BIGINT</td><td>种类（FK → pet_type）</td></tr>
+<tr><td>pet_name</td><td>VARCHAR(50)</td><td>宠物名（最多 12 字，只能起一次）</td></tr>
+<tr><td>gender</td><td>VARCHAR(10)</td><td>MALE / FEMALE</td></tr>
+<tr><td>personality</td><td>VARCHAR(20)</td><td>活泼/高冷/粘人/贪吃/傲娇</td></tr>
+<tr><td>hunger / mood / coins</td><td>INT</td><td>饥饿度 / 心情 / 游戏币（0-100）</td></tr>
+<tr><td>status</td><td>VARCHAR(10)</td><td>ALIVE / DANGER / STARVED</td></tr>
+<tr><td>hatched_at</td><td>DATETIME</td><td>出生时间</td></tr>
+<tr><td>hunger_calc_at</td><td>DATETIME</td><td>上次饥饿结算时间（懒计算）</td></tr>
+<tr><td>danger_since</td><td>DATETIME</td><td>进入病危时间（24h 倒计时）</td></tr>
+<tr><td>listed</td><td>INT</td><td>1 已上架配种市场</td></tr>
+<tr><td>breeding_cool_until</td><td>DATETIME</td><td>配种冷却截止</td></tr>
+<tr><td>deleted</td><td>INT</td><td>逻辑删除</td></tr>
+</table>
+
+<h4>schedule（日程表）</h4>
+<table>
+<tr><th>字段</th><th>类型</th><th>说明</th></tr>
+<tr><td>id</td><td>BIGINT AUTO_INCREMENT</td><td>主键</td></tr>
+<tr><td>user_id</td><td>BIGINT</td><td>归属用户</td></tr>
+<tr><td>title</td><td>VARCHAR(200)</td><td>日程标题</td></tr>
+<tr><td>scheduled_at</td><td>DATETIME</td><td>计划时间</td></tr>
+<tr><td>priority</td><td>VARCHAR(10)</td><td>HIGH / MEDIUM / LOW</td></tr>
+<tr><td>tag</td><td>VARCHAR(50)</td><td>标签</td></tr>
+<tr><td>repeat_type</td><td>VARCHAR(20)</td><td>NONE / DAILY / WEEKLY</td></tr>
+<tr><td>completed_at</td><td>DATETIME</td><td>完成时间</td></tr>
+<tr><td>last_notified_at</td><td>DATETIME</td><td>上次通知时间（防重复）</td></tr>
+</table>
+
+<h4>pomodoro_record（番茄钟记录表）</h4>
+<table>
+<tr><th>字段</th><th>类型</th><th>说明</th></tr>
+<tr><td>id</td><td>BIGINT AUTO_INCREMENT</td><td>主键</td></tr>
+<tr><td>user_id</td><td>BIGINT</td><td>归属用户</td></tr>
+<tr><td>pet_id</td><td>BIGINT</td><td>关联宠物</td></tr>
+<tr><td>duration_minutes</td><td>INT</td><td>计划时长</td></tr>
+<tr><td>actual_minutes</td><td>INT</td><td>实际专注分钟</td></tr>
+<tr><td>coins_earned</td><td>INT</td><td>获得游戏币</td></tr>
+<tr><td>status</td><td>VARCHAR(20)</td><td>ONGOING / PAUSED / COMPLETED / ABANDONED</td></tr>
+<tr><td>paused_count</td><td>INT</td><td>暂停次数（≤2）</td></tr>
+</table>
+
+<h4>inbox_message（收件箱消息表）</h4>
+<table>
+<tr><th>字段</th><th>类型</th><th>说明</th></tr>
+<tr><td>id</td><td>BIGINT AUTO_INCREMENT</td><td>主键</td></tr>
+<tr><td>from_user_id</td><td>BIGINT</td><td>发送人（0=系统）</td></tr>
+<tr><td>to_user_id</td><td>BIGINT</td><td>收件人</td></tr>
+<tr><td>type</td><td>VARCHAR(20)</td><td>BREED_REQUEST/GIFT_REQUEST/CHAT/FRIEND_REQUEST/REPORT</td></tr>
+<tr><td>content</td><td>TEXT</td><td>消息内容</td></tr>
+<tr><td>status</td><td>VARCHAR(20)</td><td>UNREAD / READ</td></tr>
+<tr><td>req_status</td><td>VARCHAR(20)</td><td>PENDING / ACCEPTED / REJECTED（仅申请类）</td></tr>
+</table>
+
+<!-- ==================== 3. API 接口清单 ==================== -->
+<h2>3. API 接口清单</h2>
+<p>后端共 23 个 Controller，BaseURL: <code>http://localhost:8080</code>。所有需登录的接口要求 <code>Authorization: Bearer &lt;jwt&gt;</code> 请求头。</p>
+
+<h3>3.1 认证与用户</h3>
+<table>
+<tr><th>方法</th><th>路径</th><th>说明</th><th>认证</th></tr>
+<tr><td class="method-post">POST</td><td>/api/auth/register-code</td><td>发送注册验证码</td><td>否</td></tr>
+<tr><td class="method-post">POST</td><td>/api/auth/register</td><td>注册（首用户自动 ADMIN）</td><td>否</td></tr>
+<tr><td class="method-post">POST</td><td>/api/auth/login</td><td>登录，返回 JWT</td><td>否</td></tr>
+<tr><td class="method-get">GET</td><td>/api/auth/forgot/question</td><td>取密保问题</td><td>否</td></tr>
+<tr><td class="method-post">POST</td><td>/api/auth/forgot</td><td>密保验证重置密码</td><td>否</td></tr>
+<tr><td class="method-get">GET</td><td>/api/users/lookup</td><td>按用户名查 userId</td><td>是</td></tr>
+<tr><td class="method-get">GET</td><td>/api/users/search</td><td>模糊搜索用户</td><td>是</td></tr>
+<tr><td class="method-get">GET</td><td>/api/keys/providers</td><td>14 家 AI 服务商列表</td><td>是</td></tr>
+<tr><td class="method-get">GET</td><td>/api/keys</td><td>我的 API Key（脱敏）</td><td>是</td></tr>
+<tr><td class="method-post">POST</td><td>/api/keys</td><td>新增 API Key</td><td>是</td></tr>
+<tr><td class="method-put">PUT</td><td>/api/keys/{id}</td><td>修改 API Key</td><td>是</td></tr>
+<tr><td class="method-delete">DELETE</td><td>/api/keys/{id}</td><td>删除 API Key</td><td>是</td></tr>
+<tr><td class="method-get">GET</td><td>/api/settings</td><td>读取设置</td><td>是</td></tr>
+<tr><td class="method-put">PUT</td><td>/api/settings/allow-breeding</td><td>配种授权开关</td><td>是</td></tr>
+<tr><td class="method-put">PUT</td><td>/api/settings/app-monitor</td><td>应用感知开关</td><td>是</td></tr>
+</table>
+
+<h3>3.2 宠物核心</h3>
+<table>
+<tr><th>方法</th><th>路径</th><th>说明</th></tr>
+<tr><td class="method-post">POST</td><td>/api/pet/draw</td><td>抽蛋</td></tr>
+<tr><td class="method-get">GET</td><td>/api/pet/my</td><td>我的宠物（状态实时推进）</td></tr>
+<tr><td class="method-post">POST</td><td>/api/pet/rename</td><td>改名（总是拒绝）</td></tr>
+<tr><td class="method-post">POST</td><td>/api/pet/play</td><td>玩耍</td></tr>
+<tr><td class="method-get">GET</td><td>/api/pet/play-modes</td><td>玩耍模式列表</td></tr>
+<tr><td class="method-post">POST</td><td>/api/pet/listed</td><td>上架/下架</td></tr>
+<tr><td class="method-get">GET</td><td>/api/pet/types</td><td>13 种宠物列表</td></tr>
+<tr><td class="method-get">GET</td><td>/api/health</td><td>健康检查</td></tr>
+</table>
+
+<h3>3.3 喂食/商店/配种/幼崽</h3>
+<table>
+<tr><th>方法</th><th>路径</th><th>说明</th></tr>
+<tr><td class="method-get">GET</td><td>/api/shop/items</td><td>商店物品</td></tr>
+<tr><td class="method-get">GET</td><td>/api/shop/inventory</td><td>我的背包</td></tr>
+<tr><td class="method-post">POST</td><td>/api/shop/buy</td><td>购买</td></tr>
+<tr><td class="method-post">POST</td><td>/api/shop/feed</td><td>喂食</td></tr>
+<tr><td class="method-get">GET</td><td>/api/breeding/market</td><td>配种市场</td></tr>
+<tr><td class="method-post">POST</td><td>/api/breeding/request</td><td>发起配种</td></tr>
+<tr><td class="method-get">GET</td><td>/api/breeding/my</td><td>我的配种记录</td></tr>
+<tr><td class="method-get">GET</td><td>/api/hatchling/my</td><td>我的幼崽</td></tr>
+<tr><td class="method-post">POST</td><td>/api/hatchling/claim</td><td>领取幼崽</td></tr>
+<tr><td class="method-post">POST</td><td>/api/hatchling/gift</td><td>赠送幼崽</td></tr>
+</table>
+
+<h3>3.4 日程/番茄钟</h3>
+<table>
+<tr><th>方法</th><th>路径</th><th>说明</th></tr>
+<tr><td class="method-get">GET</td><td>/api/schedule</td><td>日程列表</td></tr>
+<tr><td class="method-post">POST</td><td>/api/schedule</td><td>新增日程</td></tr>
+<tr><td class="method-put">PUT</td><td>/api/schedule/{id}</td><td>修改</td></tr>
+<tr><td class="method-delete">DELETE</td><td>/api/schedule/{id}</td><td>删除</td></tr>
+<tr><td class="method-post">POST</td><td>/api/schedule/{id}/done</td><td>完成</td></tr>
+<tr><td class="method-get">GET</td><td>/api/schedule/tags</td><td>标签列表</td></tr>
+<tr><td class="method-get">GET</td><td>/api/schedule/stats</td><td>统计</td></tr>
+<tr><td class="method-get">GET</td><td>/api/schedule/remind</td><td>到期提醒（轮询）</td></tr>
+<tr><td class="method-post">POST</td><td>/api/pomodoro/start</td><td>开始番茄钟</td></tr>
+<tr><td class="method-post">POST</td><td>/api/pomodoro/{id}/pause</td><td>暂停</td></tr>
+<tr><td class="method-post">POST</td><td>/api/pomodoro/{id}/resume</td><td>恢复</td></tr>
+<tr><td class="method-post">POST</td><td>/api/pomodoro/{id}/complete</td><td>完成</td></tr>
+<tr><td class="method-post">POST</td><td>/api/pomodoro/{id}/abandon</td><td>放弃</td></tr>
+<tr><td class="method-get">GET</td><td>/api/pomodoro/my</td><td>记录查询</td></tr>
+</table>
+
+<h3>3.5 社交/聊天/相册/桌面</h3>
+<table>
+<tr><th>方法</th><th>路径</th><th>说明</th></tr>
+<tr><td class="method-post">POST</td><td>/api/friends/request</td><td>好友申请</td></tr>
+<tr><td class="method-get">GET</td><td>/api/friends</td><td>好友列表</td></tr>
+<tr><td class="method-delete">DELETE</td><td>/api/friends/{friendId}</td><td>删除好友</td></tr>
+<tr><td class="method-get">GET</td><td>/api/blacklist</td><td>拉黑列表</td></tr>
+<tr><td class="method-post">POST</td><td>/api/blacklist/{userId}</td><td>拉黑</td></tr>
+<tr><td class="method-delete">DELETE</td><td>/api/blacklist/{userId}</td><td>取消拉黑</td></tr>
+<tr><td class="method-get">GET</td><td>/api/inbox</td><td>收件箱</td></tr>
+<tr><td class="method-post">POST</td><td>/api/inbox/message</td><td>发消息</td></tr>
+<tr><td class="method-post">POST</td><td>/api/inbox/{id}/read</td><td>标记已读</td></tr>
+<tr><td class="method-post">POST</td><td>/api/inbox/{id}/accept</td><td>同意申请</td></tr>
+<tr><td class="method-post">POST</td><td>/api/inbox/{id}/reject</td><td>拒绝申请</td></tr>
+<tr><td class="method-delete">DELETE</td><td>/api/inbox/conversation</td><td>删除对话</td></tr>
+<tr><td class="method-post">POST</td><td>/api/reports</td><td>举报</td></tr>
+<tr><td class="method-get">GET</td><td>/api/chat/history</td><td>对话历史</td></tr>
+<tr><td class="method-post">POST</td><td>/api/chat/message</td><td>文字对话</td></tr>
+<tr><td class="method-post">POST</td><td>/api/chat/voice</td><td>语音对话</td></tr>
+<tr><td class="method-post">POST</td><td>/api/photo/upload</td><td>拍照上传</td></tr>
+<tr><td class="method-get">GET</td><td>/api/photo/albums</td><td>相册</td></tr>
+<tr><td class="method-delete">DELETE</td><td>/api/photo/{photoId}</td><td>删除照片</td></tr>
+<tr><td class="method-get">GET</td><td>/api/desktop/zones</td><td>分区列表</td></tr>
+<tr><td class="method-post">POST</td><td>/api/desktop/zones</td><td>新增分区</td></tr>
+<tr><td class="method-put">PUT</td><td>/api/desktop/zones/{id}</td><td>修改分区</td></tr>
+<tr><td class="method-delete">DELETE</td><td>/api/desktop/zones/{id}</td><td>删除分区</td></tr>
+<tr><td class="method-get">GET</td><td>/api/gravestones</td><td>墓碑列表</td></tr>
+<tr><td class="method-get">GET</td><td>/api/reflection/questions</td><td>反思题目</td></tr>
+<tr><td class="method-post">POST</td><td>/api/reflection/submit</td><td>提交反思</td></tr>
+</table>
+
+<h3>3.6 管理员接口</h3>
+<table>
+<tr><th>方法</th><th>路径</th><th>说明</th></tr>
+<tr><td class="method-get">GET</td><td>/api/admin/users</td><td>用户分页列表</td></tr>
+<tr><td class="method-delete">DELETE</td><td>/api/admin/users/{id}</td><td>删除用户</td></tr>
+<tr><td class="method-put">PUT</td><td>/api/admin/users/{id}/status</td><td>启用/禁用</td></tr>
+<tr><td class="method-post">POST</td><td>/api/admin/users/{id}/reset-password</td><td>重置密码</td></tr>
+<tr><td class="method-get">GET</td><td>/api/admin/pets</td><td>全部宠物</td></tr>
+<tr><td class="method-post">POST</td><td>/api/admin/switch-pet</td><td>换宠（测试）</td></tr>
+<tr><td class="method-get">GET</td><td>/api/admin/reports</td><td>举报列表</td></tr>
+<tr><td class="method-post">POST</td><td>/api/admin/reports/{id}/resolve</td><td>处理举报</td></tr>
+<tr><td class="method-get">GET</td><td>/api/admin/stats</td><td>数据总览</td></tr>
+<tr><td class="method-post">POST</td><td>/api/admin/shop-items</td><td>新增商品</td></tr>
+<tr><td class="method-get">GET</td><td>/api/admin/play-modes</td><td>玩耍模式列表</td></tr>
+<tr><td class="method-post">POST</td><td>/api/admin/play-modes</td><td>新增模式</td></tr>
+</table>
+
+<h3>3.7 设计模式与关键决策</h3>
+<table>
+<tr><th>决策</th><th>方案</th><th>理由</th></tr>
+<tr><td>饥饿计算</td><td>懒计算（访问时按时间差一次性结算）</td><td>不需要定时任务轮询，减少数据库压力</td></tr>
+<tr><td>宠物死亡</td><td>病危 24h 缓冲 + 墓碑 + 反思答题</td><td>给用户补救机会，同时让"死亡"有教育意义</td></tr>
+<tr><td>抽蛋稀有度</td><td>70% / 25% / 5%</td><td>传说稀有但不绝望，普通也能养出感情</td></tr>
+<tr><td>配种冷却</td><td>雄性 3 天冷却</td><td>防止刷配种</td></tr>
+<tr><td>番茄钟奖励</td><td>1 币/分钟</td><td>20 分钟 = 20 币，1 小时 = 60 币，激励长专注</td></tr>
+<tr><td>应用感知</td><td>默认关 + 仅进程名 + 7 天清理</td><td>隐私红线，用户知情同意</td></tr>
+<tr><td>透明悬浮窗</td><td>禁用硬件加速 + DPI 感知</td><td>规避显卡崩溃，同时避免高 DPI 模糊</td></tr>
+</table>
+
+</body>
+</html>

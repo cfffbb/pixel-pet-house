@@ -264,3 +264,8 @@ Vite 开发服务器运行在 `http://localhost:5173`，Electron 会自动加载
 ## License
 
 MIT
+<img width="622" height="400" alt="image" src="https://github.com/user-attachments/assets/11fe199b-14b4-48ca-9795-b31310a6adae" />
+<img width="848" height="447" alt="image" src="https://github.com/user-attachments/assets/8519384f-44d4-4450-9c8a-eec2ced521dc" />
+<img width="851" height="461" alt="image" src="https://github.com/user-attachments/assets/0400eb4c-9d46-4ee6-b235-f0a6a158fc45" />
+
+
